@@ -75,3 +75,7 @@ MyEnergyUI 包构建、完整 `./scripts/test-local.sh` 及最新 Mac／iOS 通�
 review 确认一项 P2：旧共享确认可能在账号切换后作用于新空间。已在确认时捕获原 storageURL，并由模型的 expectedStorageURL guard 拒绝失效动作；补充 AsyncStream 控制实际异步顺序的回归。P2 复核已关闭，当前未解决的确定 P1／P2 为 0。本轮最新完整测试通过 35 项 XCTest、89 项 Swift Testing（合计 124 项 Swift）与 8 项 Node 测试，0 失败、0 跳过；相较主题阶段增加 18 项 Swift 用例。修复后最终三目标均 `BUILD SUCCEEDED`，专用模拟器两端构建安装通过；应用 UI 因锁屏未验收，不能用表盘和配对指示替代 MyEnergy 功能通过。
 
 真实健康权限、传感器样本、后台配对传输及真机功耗仍未验证。模拟器和注入客户端的证据不能替代真机结果，也未改动用户既有 Mac 数据。
+
+## 应用图标
+
+用户随后要求提供图标，已生成并保存 1024 × 1024 无透明 PNG 主图，接入 iOS／iPadOS、macOS 和 watchOS AppIcon。三端图标资源编译及专用模拟器两端重装通过；系统入口的实际显示继续等待 Mac 解锁后的界面验收。[图标说明](../design/app-icon.md)记录主图、各端尺寸及完整提示词。

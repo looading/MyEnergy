@@ -111,3 +111,13 @@ Xcode 27.2 的模拟器前端为 Device Hub，可从 Xcode → Open Developer To
 待补应用 UI 证据：打开 MyEnergy、快记本机保存及重启保留、独立心情与主题预览、习惯完成／撤销、睡眠缺失与来源、身体入口与无样本状态、匿名共享限制、设置与示例隔离、窄屏及动态字体。当前以上用例全部保持未验收。已有 Mac 本机数据本轮不作改动；不得通过导入或删除本人记录来准备界面。
 
 模拟器不能提供真实传感器或用户日常健康历史，也不能替代真实系统授权、后台配对送达、真机断连恢复和功耗验收。本轮没有新增独立 Watch 云登录、后台采样、widget、睡眠质量或压力分数；这些平台和范围边界继续保留。
+
+## 应用图标增量
+
+用户要求提供应用图标，已用内置 imagegen 生成蓝绿叶形环与金杏星光的图形，保存 1024 × 1024 无透明 PNG 主图及三端 AppIcon 资源。iOS／iPadOS 和 Watch 各使用一张 1024 主图，由 Xcode 生成平台变体；Mac 有完整 10 个尺寸槽位。13 张 PNG 与 6 份 Contents.json 已检查尺寸、文件存在和无 alpha，资源与工程 AppIcon 配置已接好。
+
+图标更新后的 `MyEnergyWatch`、`MyEnergyiOS`、`MyEnergyMac` 通用目标全部构建成功，日志为 icon-MyEnergyWatch.log、icon-MyEnergyiOS.log、icon-MyEnergyMac.log。仅有既有 AppIntents 未依赖框架的元数据提示，未见图标资源警告。此次仅新增资源和工程引用，复用已通过的 124 项 Swift／8 项 Node 行为回归。
+
+图标版随后通过 `run-watch.sh --prepare-only` 的 DeviceDebug 构建，并重新安装到同一组专用 iPhone／Watch，日志为 icon-simulator-prepare.log。专用 pair 复用检查确认未新建额外设备。
+
+主图、各平台资源和完整提示词见[图标说明](../design/app-icon.md)。系统启动器、通知及设置中的实际显示仍待解锁后的界面验收。

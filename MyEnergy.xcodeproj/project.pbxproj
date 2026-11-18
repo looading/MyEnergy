@@ -8,10 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		46D15C252B723296F6A3BFDC /* MyEnergyWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970B955F0A818B343A355E0C /* MyEnergyWatchApp.swift */; };
+		4ED8212EB730D86B8A33D5D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4EC7E4A70BB533953DD8E24 /* Assets.xcassets */; };
 		7FEACBF0D725233C322FFFEA /* MyEnergyWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 6BAC50949D494095E577EDB2 /* MyEnergyWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		878A2C9F917DA17E0AD5378F /* MyEnergyUI in Frameworks */ = {isa = PBXBuildFile; productRef = FB050D72E521762519D36158 /* MyEnergyUI */; };
 		B31A7022A4A06C2DF07CE14E /* MyEnergyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3225BDBAF8B09B30F040AD5A /* MyEnergyUI */; };
 		C37687CF68E41CD0F62FE4A9 /* MyEnergyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF27FE51C5DE373FBE596CD3 /* MyEnergyApp.swift */; };
+		C6C535A063FB3F0C95BCAED2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 862E7DD39059B61253E05C84 /* Assets.xcassets */; };
+		C81096A70362C75456C96AB4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 037F4CC05C341E6B19D4840F /* Assets.xcassets */; };
 		CC3F1EAE6CD86A964FFD6AA6 /* MyEnergyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF27FE51C5DE373FBE596CD3 /* MyEnergyApp.swift */; };
 		F6174972AC6FE0498806B39E /* MyEnergyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 20F6D3A5F9979D59FEB375E7 /* MyEnergyUI */; };
 /* End PBXBuildFile section */
@@ -41,12 +44,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		037F4CC05C341E6B19D4840F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2EA2329C1C5AAA53F4A69D48 /* MyEnergyKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MyEnergyKit; path = Packages/MyEnergyKit; sourceTree = SOURCE_ROOT; };
 		30A3E899D2C9B22C5749BC8F /* MyEnergyMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyEnergyMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6BAC50949D494095E577EDB2 /* MyEnergyWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyEnergyWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		862E7DD39059B61253E05C84 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		970B955F0A818B343A355E0C /* MyEnergyWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyEnergyWatchApp.swift; sourceTree = "<group>"; };
 		AF27FE51C5DE373FBE596CD3 /* MyEnergyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyEnergyApp.swift; sourceTree = "<group>"; };
 		C6EF6F5CB80DA3DAD966B46F /* MyEnergyiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MyEnergyiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4EC7E4A70BB533953DD8E24 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,12 +91,30 @@
 			path = MyEnergy;
 			sourceTree = "<group>";
 		};
+		105182FC48EDF47B0C838831 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				D4EC7E4A70BB533953DD8E24 /* Assets.xcassets */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
 		10A54BCB97DF365894E95B45 /* MyEnergyWatch */ = {
 			isa = PBXGroup;
 			children = (
 				970B955F0A818B343A355E0C /* MyEnergyWatchApp.swift */,
 			);
 			path = MyEnergyWatch;
+			sourceTree = "<group>";
+		};
+		52BFEF93EFEF25F6400783F6 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				CF2D9493BF5BA0B330DD4950 /* iOS */,
+				105182FC48EDF47B0C838831 /* macOS */,
+				6DB890E0CB3A42038995F317 /* watchOS */,
+			);
+			path = Assets;
 			sourceTree = "<group>";
 		};
 		6D44324320A9DCA26A185ED4 /* Products */ = {
@@ -103,10 +127,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6DB890E0CB3A42038995F317 /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				037F4CC05C341E6B19D4840F /* Assets.xcassets */,
+			);
+			path = watchOS;
+			sourceTree = "<group>";
+		};
 		9991CE8E005EC3CD17DDAA0D = {
 			isa = PBXGroup;
 			children = (
 				F745971DD30120E88F9A0911 /* Apps */,
+				52BFEF93EFEF25F6400783F6 /* Assets */,
 				C7E09C6A448FD18ADD6D05D6 /* Packages */,
 				6D44324320A9DCA26A185ED4 /* Products */,
 			);
@@ -118,6 +151,14 @@
 				2EA2329C1C5AAA53F4A69D48 /* MyEnergyKit */,
 			);
 			path = Packages;
+			sourceTree = "<group>";
+		};
+		CF2D9493BF5BA0B330DD4950 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				862E7DD39059B61253E05C84 /* Assets.xcassets */,
+			);
+			path = iOS;
 			sourceTree = "<group>";
 		};
 		F745971DD30120E88F9A0911 /* Apps */ = {
@@ -137,6 +178,7 @@
 			buildConfigurationList = 141F4CC1F3D2842BD8216FDF /* Build configuration list for PBXNativeTarget "MyEnergyWatch" */;
 			buildPhases = (
 				196583BEB19D0D98A6A027E0 /* Sources */,
+				961C0DD867F08602E0EB8B69 /* Resources */,
 				8F9CC5D38F960E490C02A95B /* Frameworks */,
 			);
 			buildRules = (
@@ -156,6 +198,7 @@
 			buildConfigurationList = E1C396D20ED28C25424B3922 /* Build configuration list for PBXNativeTarget "MyEnergyMac" */;
 			buildPhases = (
 				FC98C3610160015CD8682DDC /* Sources */,
+				D717F45C9B45C3A687DBAE6A /* Resources */,
 				CA127F6D856AA21692BE6CF8 /* Frameworks */,
 			);
 			buildRules = (
@@ -175,6 +218,7 @@
 			buildConfigurationList = 12C694ACE20479A1AC1BEE5C /* Build configuration list for PBXNativeTarget "MyEnergyiOS" */;
 			buildPhases = (
 				36C3ADE3657BAC089A18AF9B /* Sources */,
+				A7B39B14E68D7E57913043C9 /* Resources */,
 				6D308A754BF4E94743C5C862 /* Frameworks */,
 				D9B3B20B7700318BA09BBACD /* Embed Watch Content */,
 			);
@@ -237,6 +281,33 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		961C0DD867F08602E0EB8B69 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C81096A70362C75456C96AB4 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7B39B14E68D7E57913043C9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6C535A063FB3F0C95BCAED2 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D717F45C9B45C3A687DBAE6A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ED8212EB730D86B8A33D5D9 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		196583BEB19D0D98A6A027E0 /* Sources */ = {

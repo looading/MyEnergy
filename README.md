@@ -14,6 +14,8 @@
 
 已构建的应用位于 `build/DerivedData/Build/Products/Debug/MyEnergy.app`，也可以打开 `MyEnergy.xcodeproj` 选择 scheme。
 
+应用图标主图为 [myenergy-icon-v1.png](Assets/Brand/myenergy-icon-v1.png)，1024 × 1024、无透明通道；iPhone／iPad、Mac 和 Watch 已配置对应图标资源。[图标说明](docs/design/app-icon.md)记录设计、生成提示词和资源位置。
+
 ## 当前功能
 
 - 今日看板、0～100 主观精力、五档独立心情、备注和发生时间。

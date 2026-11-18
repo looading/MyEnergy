@@ -27,7 +27,7 @@ targets:
   MyEnergyMac:
     type: application
     platform: macOS
-    sources: [Apps/MyEnergy]
+    sources: [Apps/MyEnergy, Assets/macOS]
     dependencies:
       - package: MyEnergyKit
         product: MyEnergyUI
@@ -35,6 +35,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.myenergy.mac
         PRODUCT_NAME: MyEnergy
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_APP_SANDBOX: YES
         ENABLE_USER_SELECTED_FILES: readwrite
         ENABLE_OUTGOING_NETWORK_CONNECTIONS: YES
@@ -59,7 +60,7 @@ targets:
   MyEnergyiOS:
     type: application
     platform: iOS
-    sources: [Apps/MyEnergy]
+    sources: [Apps/MyEnergy, Assets/iOS]
     dependencies:
       - package: MyEnergyKit
         product: MyEnergyUI
@@ -69,6 +70,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.myenergy.ios
         PRODUCT_NAME: MyEnergy
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: '1,2'
         SUPPORTS_MACCATALYST: NO
       configs:
@@ -97,7 +99,7 @@ targets:
   MyEnergyWatch:
     type: application
     platform: watchOS
-    sources: [Apps/MyEnergyWatch]
+    sources: [Apps/MyEnergyWatch, Assets/watchOS]
     dependencies:
       - package: MyEnergyKit
         product: MyEnergyUI
@@ -105,6 +107,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.myenergy.ios.watchkitapp
         PRODUCT_NAME: MyEnergyWatch
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SKIP_INSTALL: YES
       configs:
         DeviceDebug:
