@@ -155,7 +155,7 @@ public struct HabitCheckIn: Identifiable, Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey { case habitID, dayKey, isComplete, modifiedAt }
 }
 
-public enum EntityKind: String, Codable, Sendable { case entry, habit, checkIn, healthSummary }
+public enum EntityKind: String, Codable, Sendable { case entry, habit, checkIn, healthSummary, sleep }
 
 public struct DeletionRecord: Identifiable, Codable, Equatable, Sendable {
   public var id: String { "\(entity.rawValue):\(entityID)" }
@@ -193,15 +193,18 @@ public struct AppSnapshot: Codable, Equatable, Sendable {
   public var checkIns: [HabitCheckIn]
   public var deletions: [DeletionRecord]
   public var sharedHealthSummaries: [SharedHealthSummary]
+  public var sleepRecords: [SleepRecord]
 
   public init(schemaVersion: Int = 1, entries: [EnergyEntry] = [], habits: [HabitDefinition] = [],
-              checkIns: [HabitCheckIn] = [], deletions: [DeletionRecord] = [], sharedHealthSummaries: [SharedHealthSummary] = []) {
+              checkIns: [HabitCheckIn] = [], deletions: [DeletionRecord] = [], sharedHealthSummaries: [SharedHealthSummary] = [],
+              sleepRecords: [SleepRecord] = []) {
     self.schemaVersion = schemaVersion
     self.entries = entries
     self.habits = habits
     self.checkIns = checkIns
     self.deletions = deletions
     self.sharedHealthSummaries = sharedHealthSummaries
+    self.sleepRecords = sleepRecords
   }
 
   public init(from decoder: any Decoder) throws {
@@ -214,7 +217,8 @@ public struct AppSnapshot: Codable, Equatable, Sendable {
               habits: try values.decode([HabitDefinition].self, forKey: .habits),
               checkIns: try values.decode([HabitCheckIn].self, forKey: .checkIns),
               deletions: try values.decode([DeletionRecord].self, forKey: .deletions),
-              sharedHealthSummaries: try values.decodeIfPresent([SharedHealthSummary].self, forKey: .sharedHealthSummaries) ?? [])
+              sharedHealthSummaries: try values.decodeIfPresent([SharedHealthSummary].self, forKey: .sharedHealthSummaries) ?? [],
+              sleepRecords: try values.decodeIfPresent([SleepRecord].self, forKey: .sleepRecords) ?? [])
     do { self = try validated() } catch { throw ModelValidation.decodingError(error, decoder: decoder) }
   }
 
@@ -224,17 +228,19 @@ public struct AppSnapshot: Codable, Equatable, Sendable {
     let checkedHabits = try habits.map { try $0.validated() }
     let checkedHealthSummaries = try sharedHealthSummaries.map { try $0.validated() }
     for checkIn in checkIns { try checkIn.checkValidity() }
+    for record in sleepRecords { try record.checkValidity() }
     for deletion in deletions { try deletion.checkValidity() }
     try ModelValidation.unique(entries.map { $0.id.uuidString })
     try ModelValidation.unique(checkedHabits.map { $0.id.uuidString })
     try ModelValidation.unique(checkIns.map(\.id))
     try ModelValidation.unique(deletions.map(\.id))
     try ModelValidation.unique(checkedHealthSummaries.map { $0.id.uuidString })
+    try ModelValidation.unique(sleepRecords.map { $0.id.uuidString })
     return AppSnapshot(schemaVersion: schemaVersion, entries: entries, habits: checkedHabits, checkIns: checkIns,
-                       deletions: deletions, sharedHealthSummaries: checkedHealthSummaries)
+                       deletions: deletions, sharedHealthSummaries: checkedHealthSummaries, sleepRecords: sleepRecords)
   }
 
-  private enum CodingKeys: String, CodingKey { case schemaVersion, entries, habits, checkIns, deletions, sharedHealthSummaries }
+  private enum CodingKeys: String, CodingKey { case schemaVersion, entries, habits, checkIns, deletions, sharedHealthSummaries, sleepRecords }
 }
 
 enum ModelValidation {
@@ -251,7 +257,7 @@ enum ModelValidation {
 
   static func canonicalID(_ value: String, entity: EntityKind) -> String? {
     switch entity {
-    case .entry, .habit, .healthSummary: return UUID(uuidString: value)?.uuidString
+    case .entry, .habit, .healthSummary, .sleep: return UUID(uuidString: value)?.uuidString
     case .checkIn:
       let parts = value.split(separator: ":", omittingEmptySubsequences: false)
       guard parts.count == 2, let habitID = UUID(uuidString: String(parts[0])), DateRules.isValidDayKey(String(parts[1])) else { return nil }

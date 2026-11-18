@@ -6,7 +6,7 @@
 
 | 检查 | 命令与条件 | 结果 |
 | --- | --- | --- |
-| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 68 项通过：20 XCTest、48 Swift Testing；0 失败，双客户端及账号生命周期全部实际执行 |
+| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 89 项通过：35 XCTest、54 Swift Testing；0 失败，双客户端及账号生命周期全部实际执行 |
 | 服务 | `node --test server/test/*.test.mjs` | 8 项通过，0 失败 |
 | Mac | `./scripts/build.sh MyEnergyMac` | 构建通过，实际启动 |
 | iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | 通用模拟器目标通过，包含 Watch companion |
@@ -59,3 +59,15 @@ Watch 回归覆盖异步 namespace 串行／合并、旧账号队列隔离、ACK
 定位并修复原未签名 Mac Debug 对数据保护钥匙串写入的 -34018（errSecMissingEntitlement）。对照仅改变钥匙串实现，原路径失败而系统登录钥匙串成功；修复限定 macOS Debug，使用独立 service 名称。正式版、iOS／watchOS 不作同类降级。另修复恢复过程可改 endpoint 的竞态，并用受控挂起加独立远端客户端回归，review 已确认修复。
 
 一项早期恢复测试错误地让两个 controller 共用同一设备的基线文件；已改用独立设备目录和基线重现远端更新，最终完整回归通过。未用删除断言或放宽结果来绕过失败。
+
+## 睡眠观测增量
+
+用户要求将睡眠独立纳入观测。本轮实际执行 `./scripts/test-local.sh`：35 项 XCTest、54 项 Swift Testing，合计 89 项 Swift 测试，加 8 项 Node 服务测试，全部通过、没有跳过。相较上轮新增 21 项 Swift 回归。Mac 和 iPhone／iPad 通用目标（含 Watch companion）均构建通过。
+
+新增覆盖：SleepRecord／SleepNight 输入与解码校验、旧 schema 1 兼容、睡眠三方合并与 tombstone、有效 asleep 区间并集、awake／inBed 排除、未结束与无效区间、跨午夜、春秋 DST、主要片段与午睡、来源优先级、缺失日、手动增改删与重启、示例隔离、整空间删除、最新摘要单独共享，以及真实开发服务的睡眠记录／摘要密文传输及离线删除防复活。
+
+独立 review 发现查看设备与来源时区混用会让刚结束的睡眠从统计中消失。已将范围与分组统一为查看设备时区，保留来源时区显示边界，并加入上海记录在洛杉矶午夜前查看的具体回归。相关文字也已调整。
+
+Mac 实际操作：新增“睡眠”侧栏与今日卡片；空态无伪造数值；补记默认昨夜 23:00 至今晨 07:00，明确为自述时段估算；输入“睡眠功能验收样例，非真实睡眠测量。”，取消后重开仍保留草稿；保存后显示 8.0 小时和 1／7 有观测日；切换 30 天显示 1／30，均值仍为 8.0 小时，其余日为空；退出并重新启动后今日卡片仍显示同一记录。没有读取真实健康数据或进行真实 Apple 登录。
+
+原始睡眠历史只存在 HealthReport 临时数据中；健康摘要仍须明确共享，且只写入选定最新 SleepNight。手动补记作为用户填写的应用记录进入当前账号的加密同步。全部代码沿用原生与本地开发阶段，不宣称真机睡眠检测、分期或睡眠质量评分通过。

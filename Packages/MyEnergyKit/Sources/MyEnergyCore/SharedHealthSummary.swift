@@ -9,9 +9,11 @@ public struct SharedHealthSummary: Identifiable, Codable, Equatable, Sendable {
   public var restingHeartRate: Double?
   public var sleepHours: Double?
   public var updatedAt: Date
+  public var sleepNight: SleepNight?
 
   public init(id: UUID = UUID(), sourceIdentifier: String, sourceDescription: String, recovery: RecoverySummary,
-              restingHeartRate: Double? = nil, sleepHours: Double? = nil, updatedAt: Date = Date()) throws {
+              restingHeartRate: Double? = nil, sleepHours: Double? = nil, updatedAt: Date = Date(),
+              sleepNight: SleepNight? = nil) throws {
     self.id = id
     self.sourceIdentifier = sourceIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
     self.sourceDescription = sourceDescription.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -19,6 +21,7 @@ public struct SharedHealthSummary: Identifiable, Codable, Equatable, Sendable {
     self.restingHeartRate = restingHeartRate
     self.sleepHours = sleepHours
     self.updatedAt = updatedAt
+    self.sleepNight = sleepNight
     try checkValidity()
   }
 
@@ -31,7 +34,8 @@ public struct SharedHealthSummary: Identifiable, Codable, Equatable, Sendable {
                     recovery: values.decode(RecoverySummary.self, forKey: .recovery),
                     restingHeartRate: values.decodeIfPresent(Double.self, forKey: .restingHeartRate),
                     sleepHours: values.decodeIfPresent(Double.self, forKey: .sleepHours),
-                    updatedAt: values.decode(Date.self, forKey: .updatedAt))
+                    updatedAt: values.decode(Date.self, forKey: .updatedAt),
+                    sleepNight: values.decodeIfPresent(SleepNight.self, forKey: .sleepNight))
     } catch { throw ModelValidation.decodingError(error, decoder: decoder) }
   }
 
@@ -53,16 +57,18 @@ public struct SharedHealthSummary: Identifiable, Codable, Equatable, Sendable {
       }
     }
     try ModelValidation.date(updatedAt)
+    try sleepNight?.checkValidity()
     try recovery.checkValidity()
   }
 
   func validated() throws -> SharedHealthSummary {
     try SharedHealthSummary(id: id, sourceIdentifier: sourceIdentifier, sourceDescription: sourceDescription,
-                            recovery: recovery, restingHeartRate: restingHeartRate, sleepHours: sleepHours, updatedAt: updatedAt)
+                            recovery: recovery, restingHeartRate: restingHeartRate, sleepHours: sleepHours, updatedAt: updatedAt,
+                            sleepNight: sleepNight)
   }
 
   private enum CodingKeys: String, CodingKey {
-    case id, sourceIdentifier, sourceDescription, recovery, restingHeartRate, sleepHours, updatedAt
+    case id, sourceIdentifier, sourceDescription, recovery, restingHeartRate, sleepHours, updatedAt, sleepNight
   }
 }
 

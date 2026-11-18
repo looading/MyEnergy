@@ -24,7 +24,7 @@ struct EnergySettingsView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("MyEnergy").font(.title2.weight(.semibold)).foregroundStyle(EnergyStyle.ink)
                             Text(model.localStatus).font(.callout).foregroundStyle(EnergyStyle.secondary)
-                            Text("\(model.snapshot.entries.count) 条主观记录 · \(model.snapshot.habits.count) 个习惯")
+                            Text("\(model.snapshot.entries.count) 条主观记录 · \(model.visibleSleepRecords.count) 条睡眠补记 · \(model.snapshot.habits.count) 个习惯")
                                 .font(.caption).foregroundStyle(EnergyStyle.secondary)
                         }
                         Spacer(minLength: 0)
@@ -63,7 +63,7 @@ struct EnergySettingsView: View {
                 EnergyCard {
                     VStack(alignment: .leading, spacing: 18) {
                         SectionHeading(title: "数据管理", subtitle: "导出和删除前，都由你确认")
-                        Text("导出包含精力、心情、备注、习惯、完成记录、删除标记，以及账号中已明确共享的健康摘要；不含 Apple 健康原始样本或历史序列。JSON 文件本身未加密，含个人信息，请自行选择保存位置并妥善保管。")
+                        Text("导出包含精力、心情、备注、手动睡眠时段、习惯、完成记录、删除标记，以及账号中已明确共享的最新健康摘要（含睡眠时段）；不含 Apple 健康原始样本或历史序列。JSON 文件本身未加密，含个人信息，请自行选择保存位置并妥善保管。")
                             .font(.callout).foregroundStyle(EnergyStyle.secondary)
                         Button { prepareExport() } label: {
                             Label(model.isDemo ? "导出示例记录" : "导出我的记录", systemImage: "square.and.arrow.up")
@@ -73,7 +73,7 @@ struct EnergySettingsView: View {
                         Button(role: .destructive) { showsClear = true } label: {
                             Label(model.isDemo ? "清除示例空间中的记录" : "删除 MyEnergy 全部记录", systemImage: "trash")
                         }.disabled(!model.canEdit)
-                        Text("清除后会保留删除标记，供设备恢复同步后处理。此操作不会删除 Apple 健康原始数据、系统备份或已导出文件。")
+                        Text("清除范围包括手动睡眠补记和备注。清除后会保留删除标记，供设备恢复同步后处理。此操作不会删除 Apple 健康原始数据、系统备份或已导出文件。")
                             .font(.footnote).foregroundStyle(EnergyStyle.secondary)
                     }
                 }
@@ -141,7 +141,7 @@ private struct ClearDataConfirmationView: View {
                 Section {
                     Label(model.isDemo ? "清除当前示例空间" : "删除全部 MyEnergy 记录", systemImage: "trash")
                         .font(.headline).foregroundStyle(.red)
-                    Text("将删除当前空间的 \(model.snapshot.entries.count) 条主观记录、\(model.snapshot.habits.count) 个习惯、全部习惯完成记录，以及 \(model.snapshot.sharedHealthSummaries.count) 份已共享健康摘要。")
+                    Text("将删除当前空间的 \(model.snapshot.entries.count) 条主观记录、\(model.visibleSleepRecords.count) 条手动睡眠补记、\(model.snapshot.habits.count) 个习惯、全部习惯完成记录，以及 \(model.snapshot.sharedHealthSummaries.count) 份已共享健康摘要。")
                     Text(model.isDemo ? "这只会影响当前示例，你的真实记录保持原样。" : "删除标记会留在本机，开启同步后再传播到其他设备。离线设备和服务器尚未确认前，不能视为所有设备已清除。")
                         .foregroundStyle(EnergyStyle.secondary)
                     Text("Apple 健康原始数据、已导出文件和系统备份不在此次清除范围。账号删除请在“设备与同步”中单独处理。")

@@ -11,16 +11,18 @@ public struct HealthReport: Sendable {
   public var sleepHours: Double?
   public var updatedAt: Date
   public var sourceDescription: String
+  public var sleepHistory: [SleepNight]
 
   public init(
     recovery: RecoverySummary, restingHeartRate: Double? = nil, sleepHours: Double? = nil,
-    updatedAt: Date = Date(), sourceDescription: String
+    updatedAt: Date = Date(), sourceDescription: String, sleepHistory: [SleepNight] = []
   ) {
     self.recovery = recovery
     self.restingHeartRate = restingHeartRate
     self.sleepHours = sleepHours
     self.updatedAt = updatedAt
     self.sourceDescription = sourceDescription
+    self.sleepHistory = sleepHistory
   }
 }
 
@@ -93,13 +95,15 @@ public final class HealthDataClient {
     }.max(by: { $0.date < $1.date })?.value
     let samples = hrv.map { HRVSample(valueMS: $0.value, date: $0.date) }
     let recovery = RecoveryAnalyzer.analyze(samples: samples, now: now)
-    let hours = HealthSleepAnalyzer.latestNightHours(intervals: sleep, now: now)
+    let sleepHistory = HealthSleepAnalyzer.nights(intervals: sleep, now: now)
+    let hours = SleepNight.latestPrimary(in: sleepHistory)?.durationHours
     let hasData = !samples.isEmpty || resting != nil || hours != nil
     return HealthReport(
       recovery: recovery, restingHeartRate: resting, sleepHours: hours, updatedAt: now,
       sourceDescription: hasData
         ? "Apple Health · HRV SDNN、静息心率与睡眠；仅作个人历史参考。"
-        : "Apple Health 暂无可读取样本；可能尚未记录或未开放读取权限。"
+        : "Apple Health 暂无可读取样本；可能尚未记录或未开放读取权限。",
+      sleepHistory: sleepHistory
     )
     #else
     return HealthReport(
@@ -140,12 +144,7 @@ public final class HealthDataClient {
       let query = HKSampleQuery(sampleType: HKCategoryType(.sleepAnalysis), predicate: predicate,
         limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, error in
         if let error { continuation.resume(throwing: error); return }
-        let asleepValues = Set([
-          HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
-          HKCategoryValueSleepAnalysis.asleepCore.rawValue,
-          HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
-          HKCategoryValueSleepAnalysis.asleepREM.rawValue
-        ])
+        let asleepValues = Set(HKCategoryValueSleepAnalysis.allAsleepValues.map(\.rawValue))
         let intervals = (samples as? [HKCategorySample] ?? []).map {
           HealthSleepInterval(start: $0.startDate, end: $0.endDate, isAsleep: asleepValues.contains($0.value))
         }

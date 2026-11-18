@@ -20,6 +20,8 @@
 - 记录新增、详情、编辑、删除和完整历史入口。
 - 习惯创建、编辑、停用、恢复、完成与撤销。
 - 7／30 天趋势及等价逐日列表，缺失日不计为零。
+- 独立睡眠页、开始／结束与每日主要时长、7／30 天睡眠变化；本地可手动补记并编辑／删除，明确标为自述时段估算。
+- 自动睡眠来源按需读取 Apple 健康，重叠样本去重；同日不同来源不相加，原始历史留在设备。
 - 独立内存示例空间，持续标识，退出后恢复本人记录；示例不读取健康或同步。
 - 校验、原子文件存储、损坏文件保留、JSON 导出及删除标记。
 - iPhone tab、iPad／Mac 侧栏、Watch 快记与 Digital Crown；深色及动态字体适配。
@@ -93,3 +95,5 @@ HealthKit 需要支持设备及授权；空结果不能证明拒绝授权。Watc
 - [风险台账](docs/project/risk-register.md)
 - [共享接口](docs/implementation/contracts.md)
 - [Apple 平台依据](docs/research/apple-platform-feasibility.md)
+
+睡眠观测的日期与时区、来源优先级和数据边界见 [睡眠增量说明](docs/implementation/sleep-observation.md)。

@@ -102,8 +102,14 @@ struct HealthDetailsView: View {
                     }
                     Section("其他身体参考") {
                         metric("最近可读静息心率", value: report.restingHeartRate, unit: "次/分")
-                        metric("最近完整夜间睡眠", value: report.sleepHours, unit: "小时")
-                        Text("缺失项目显示为“暂无数据”，不会补成零。睡眠按可读样本去重汇总。")
+                        metric("最近睡眠观测", value: report.sleepHours, unit: "小时")
+                        if let sleep = SleepNight.latestPrimary(in: report.sleepHistory) {
+                            LabeledContent("观测开始", value: sleepDateText(sleep.bedtime, timeZoneIdentifier: sleep.timeZoneIdentifier))
+                            LabeledContent("观测结束", value: sleepDateText(sleep.wakeTime, timeZoneIdentifier: sleep.timeZoneIdentifier))
+                            Text("\(sleep.sourceDescription) · 时区 \(sleep.timeZoneIdentifier)")
+                                .font(.caption).foregroundStyle(EnergyStyle.secondary)
+                        }
+                        Text("缺失项目显示为“暂无数据”，不会补成零。睡眠按有效睡眠样本去重，不计卧床或清醒时间。开始和结束为观测边界，不能确定真正入睡或起床时刻，也不代表此后已经醒来。")
                             .font(.footnote).foregroundStyle(EnergyStyle.secondary)
                     }
                     Section("来源与读取") {
@@ -166,7 +172,7 @@ struct HealthSharingControls: View {
                     else { Task { await model.setHealthSharing(false) } }
                 }))
                 .disabled(!model.canEdit || model.isDemo || (!model.healthSharingEnabled && !canEnable))
-            Text("默认关闭。只共享最近 HRV、个人历史对照、静息心率和睡眠汇总，以及来源和时间；不共享原始健康样本或历史序列。摘要加入账号空间后，经加密同步传给同账号设备。")
+            Text("默认关闭。只共享最近 HRV、个人历史对照、静息心率，以及选定的最新睡眠时长、开始与结束时间和来源；不共享原始健康样本或历史序列。摘要加入账号空间后，经加密同步传给同账号设备。")
                 .font(.footnote).foregroundStyle(EnergyStyle.secondary)
             if model.healthSharingEnabled {
                 Text("已选择共享。摘要先保存在当前账号空间，设备收到与否请查看“设备与同步”；刷新本机健康数据时会更新这一份摘要。")
@@ -191,7 +197,7 @@ struct HealthSharingControls: View {
             Button("同意，将最新摘要加入当前账号") { Task { await model.setHealthSharing(true) } }
             Button("取消", role: .cancel) { }
         } message: {
-            Text("将 HRV、历史对照、静息心率、睡眠汇总和来源时间保存到当前账号空间，并通过加密同步提供给同账号设备。默认不包含原始健康历史。你可随时停止并移除本设备摘要；已导出文件需自行管理。")
+            Text("将 HRV、历史对照、静息心率，以及选定的最新睡眠时长、开始与结束时间和来源保存到当前账号空间，并通过加密同步提供给同账号设备。默认不包含原始健康历史。你可随时停止并移除本设备摘要；已导出文件需自行管理。")
         }
     }
 }
@@ -210,7 +216,21 @@ private struct SharedHealthSummaryContent: View {
                 .font(.callout.weight(.semibold)).foregroundStyle(EnergyStyle.ink)
             LabeledContent("心率变异性（HRV）", value: number(summary.recovery.latestMS, unit: "ms"))
             LabeledContent("静息心率", value: number(summary.restingHeartRate, unit: "次/分"))
-            LabeledContent("夜间睡眠", value: number(summary.sleepHours, unit: "小时"))
+            if let sleep = summary.sleepNight {
+                LabeledContent("最近睡眠观测", value: number(sleep.durationHours, unit: "小时"))
+                LabeledContent("观测开始", value: sleepDateText(sleep.bedtime, timeZoneIdentifier: sleep.timeZoneIdentifier))
+                LabeledContent("观测结束", value: sleepDateText(sleep.wakeTime, timeZoneIdentifier: sleep.timeZoneIdentifier))
+                Text("\(sleep.sourceDescription) · 时区 \(sleep.timeZoneIdentifier)")
+                    .font(.caption).foregroundStyle(EnergyStyle.secondary)
+                Text("起止时间为观测边界，不能确定真正入睡或起床的时刻。这里只显示来源设备选定的最新摘要，不包含睡眠历史。")
+                    .font(.footnote).foregroundStyle(EnergyStyle.secondary)
+            } else {
+                LabeledContent("睡眠时长参考", value: number(summary.sleepHours, unit: "小时"))
+                if summary.sleepHours != nil {
+                    Text("这份旧摘要没有睡眠时段时间信息，暂不纳入睡眠逐日观测。")
+                        .font(.caption).foregroundStyle(EnergyStyle.secondary)
+                }
+            }
             Text(isOld ? "这份摘要已有一段时间，请留意以下采样与更新时间。" : recoveryDescription(summary.recovery))
                 .font(.footnote).foregroundStyle(EnergyStyle.secondary)
             if let sampledAt = summary.recovery.sampledAt {

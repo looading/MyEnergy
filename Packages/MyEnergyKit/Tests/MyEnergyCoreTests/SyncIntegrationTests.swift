@@ -92,4 +92,34 @@ struct SyncIntegrationTests {
     #expect(afterOffline.snapshot.deletions.contains { $0.entity == .healthSummary })
     try await client.deleteAccount(session: session)
   }
+
+  @Test(.enabled(if: ProcessInfo.processInfo.environment["MYENERGY_TEST_SYNC_URL"] != nil))
+  func manualSleepAndSelectedNightSyncWithoutRevivingDeletedRecord() async throws {
+    let (client, session, _, directory, a, b) = try await fixture()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let end = Date().addingTimeInterval(-3600)
+    let sleep = try SleepRecord(bedtime: end.addingTimeInterval(-8 * 3600), wakeTime: end, note: "Manual fixture")
+    let night = try SleepNight(bedtime: sleep.bedtime, wakeTime: end, asleepSeconds: 7 * 3600,
+      sourceDescription: "Explicit fixture, not a real measurement")
+    let summary = try SharedHealthSummary(sourceIdentifier: "test-device", sourceDescription: "Fixture",
+      recovery: RecoveryAnalyzer.analyze(samples: []), sleepHours: 7, sleepNight: night)
+    let first = try await a.synchronize(local: AppSnapshot(sharedHealthSummaries: [summary], sleepRecords: [sleep]))
+    try await a.acknowledgeApplied(first)
+    let received = try await b.synchronize(local: AppSnapshot())
+    try await b.acknowledgeApplied(received)
+    #expect(received.snapshot.sleepRecords == [sleep])
+    #expect(received.snapshot.sharedHealthSummaries.first?.sleepNight == night)
+    var deleted = first.snapshot
+    deleted.sleepRecords = []
+    deleted.deletions.append(DeletionRecord(entity: .sleep, entityID: sleep.id.uuidString))
+    let removal = try await a.synchronize(local: deleted)
+    try await a.acknowledgeApplied(removal)
+    var offline = received.snapshot
+    offline.sleepRecords[0].note = "Unsent offline edit"
+    let converged = try await b.synchronize(local: offline)
+    #expect(converged.snapshot.sleepRecords.isEmpty)
+    #expect(converged.snapshot.deletions.contains { $0.entity == .sleep })
+    #expect(converged.snapshot.sharedHealthSummaries.first?.sleepNight == night)
+    try await client.deleteAccount(session: session)
+  }
 }

@@ -42,6 +42,7 @@ public enum SnapshotMerger {
     let deletedHabits = Set(deletions.filter { $0.entity == .habit }.map(\.entityID))
     let deletedCheckIns = Set(deletions.filter { $0.entity == .checkIn }.map(\.entityID))
     let deletedHealthSummaries = Set(deletions.filter { $0.entity == .healthSummary }.map(\.entityID))
+    let deletedSleepRecords = Set(deletions.filter { $0.entity == .sleep }.map(\.entityID))
     let entries = mergeEntities(base: base.entries, local: local.entries, remote: remote.entries, kind: .entry,
                                identifier: { $0.id.uuidString }, deleted: deletedEntries, favoring: favoring)
     let habits = mergeEntities(base: base.habits, local: local.habits, remote: remote.habits, kind: .habit,
@@ -56,11 +57,15 @@ public enum SnapshotMerger {
     let healthSummaries = mergeEntities(base: base.sharedHealthSummaries, local: local.sharedHealthSummaries,
                                        remote: remote.sharedHealthSummaries, kind: .healthSummary,
                                        identifier: { $0.id.uuidString }, deleted: deletedHealthSummaries, favoring: favoring)
+    let sleepRecords = mergeEntities(base: base.sleepRecords, local: local.sleepRecords, remote: remote.sleepRecords,
+                                    kind: .sleep, identifier: { $0.id.uuidString }, deleted: deletedSleepRecords, favoring: favoring)
     // 未支持的版本继续携带到输出，后续校验会拒绝，避免静默降级后覆盖文件。
     let schemaVersion = [local.schemaVersion, remote.schemaVersion, base.schemaVersion].first(where: { $0 != 1 }) ?? 1
     let snapshot = AppSnapshot(schemaVersion: schemaVersion, entries: entries.values, habits: habits.values,
-                               checkIns: checkIns.values, deletions: deletions, sharedHealthSummaries: healthSummaries.values)
-    let conflicts = (entries.conflicts + habits.conflicts + checkIns.conflicts + healthSummaries.conflicts).sorted { $0.id < $1.id }
+                               checkIns: checkIns.values, deletions: deletions, sharedHealthSummaries: healthSummaries.values,
+                               sleepRecords: sleepRecords.values)
+    let conflicts = (entries.conflicts + habits.conflicts + checkIns.conflicts + healthSummaries.conflicts + sleepRecords.conflicts)
+      .sorted { $0.id < $1.id }
     return SnapshotMergeResult(snapshot: snapshot, conflicts: conflicts)
   }
 

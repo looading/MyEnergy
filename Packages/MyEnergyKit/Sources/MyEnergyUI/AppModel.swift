@@ -81,6 +81,16 @@ public final class AppModel: ObservableObject {
     public var todayKey: String { DateRules.dayKey(for: Date()) }
     public var todayEntries: [EnergyEntry] { entries(for: todayKey) }
     public var latestEntry: EnergyEntry? { snapshot.entries.max { $0.occurredAt < $1.occurredAt } }
+    public var visibleSleepRecords: [SleepRecord] {
+        let removed = Set(snapshot.deletions.filter { $0.entity == .sleep }.map(\.entityID))
+        return snapshot.sleepRecords.filter { !removed.contains($0.id.uuidString) }.sorted { $0.wakeTime > $1.wakeTime }
+    }
+    public var latestSleepObservation: SleepObservation? { sleepObservations(days: 30).last }
+    public func sleepObservations(days: Int, now: Date = Date()) -> [SleepObservation] {
+        SleepObservationBuilder.build(manual: visibleSleepRecords,
+            health: isDemo ? [] : (healthReport?.sleepHistory ?? []),
+            shared: isDemo ? [] : visibleSharedHealthSummaries, days: days, now: now)
+    }
     public var localStatus: String {
         if isDemo { return "示例空间 · 仅在内存" }
         if hasLoadFailure { return "读取失败 · 原文件已保留" }
@@ -174,6 +184,37 @@ public final class AppModel: ObservableObject {
     }
 
     @discardableResult
+    public func saveSleep(id: UUID? = nil, bedtime: Date, wakeTime: Date, note: String = "") async -> Bool {
+        if let id, !visibleSleepRecords.contains(where: { $0.id == id }) {
+            errorMessage = "这条睡眠记录已被删除，请关闭旧编辑页后重新补记。"
+            return false
+        }
+        guard wakeTime <= Date() else {
+            errorMessage = "观测记录的结束时间不能在未来。"
+            return false
+        }
+        do {
+            let existing = id.flatMap { value in visibleSleepRecords.first { $0.id == value } }
+            let record = try SleepRecord(id: id ?? UUID(), bedtime: bedtime, wakeTime: wakeTime,
+                timeZoneIdentifier: existing?.timeZoneIdentifier ?? TimeZone.current.identifier,
+                note: note, modifiedAt: Date())
+            var candidate = snapshot
+            candidate.sleepRecords.removeAll { $0.id == record.id }
+            candidate.sleepRecords.append(record)
+            return await apply(candidate)
+        } catch { errorMessage = error.localizedDescription; return false }
+    }
+
+    @discardableResult
+    public func deleteSleep(_ record: SleepRecord) async -> Bool {
+        guard visibleSleepRecords.contains(where: { $0.id == record.id }) else { return false }
+        var candidate = snapshot
+        candidate.sleepRecords.removeAll { $0.id == record.id }
+        addDeletion(.init(entity: .sleep, entityID: record.id.uuidString), to: &candidate)
+        return await apply(candidate)
+    }
+
+    @discardableResult
     public func saveHabit(id: UUID? = nil, title: String, symbol: String) async -> Bool {
         do {
             let existing = id.flatMap { value in snapshot.habits.first { $0.id == value } }
@@ -220,10 +261,12 @@ public final class AppModel: ObservableObject {
         for habit in candidate.habits { addDeletion(.init(entity: .habit, entityID: habit.id.uuidString), to: &candidate) }
         for checkIn in candidate.checkIns { addDeletion(.init(entity: .checkIn, entityID: checkIn.id), to: &candidate) }
         for summary in candidate.sharedHealthSummaries { addDeletion(.init(entity: .healthSummary, entityID: summary.id.uuidString), to: &candidate) }
+        for sleep in candidate.sleepRecords { addDeletion(.init(entity: .sleep, entityID: sleep.id.uuidString), to: &candidate) }
         candidate.entries = []
         candidate.habits = []
         candidate.checkIns = []
         candidate.sharedHealthSummaries = []
+        candidate.sleepRecords = []
         healthGeneration += 1
         let saved = await apply(candidate)
         if saved { healthSharingEnabled = false; healthSharingGenerationID = nil }
@@ -370,13 +413,15 @@ public final class AppModel: ObservableObject {
     }
 
     private static func hasData(_ report: HealthReport) -> Bool {
-        report.recovery.latestMS != nil || report.restingHeartRate != nil || report.sleepHours != nil
+        report.recovery.latestMS != nil || report.restingHeartRate != nil || report.sleepHours != nil || !report.sleepHistory.isEmpty
     }
 
     private func makeSharedSummary(_ report: HealthReport, id: UUID) throws -> SharedHealthSummary {
-        try SharedHealthSummary(id: id, sourceIdentifier: healthSourceIdentifier,
+        let latestSleep = SleepNight.latestPrimary(in: report.sleepHistory)
+        return try SharedHealthSummary(id: id, sourceIdentifier: healthSourceIdentifier,
             sourceDescription: report.sourceDescription, recovery: report.recovery,
-            restingHeartRate: report.restingHeartRate, sleepHours: report.sleepHours, updatedAt: report.updatedAt)
+            restingHeartRate: report.restingHeartRate, sleepHours: latestSleep?.durationHours ?? report.sleepHours,
+            updatedAt: report.updatedAt, sleepNight: latestSleep)
     }
 
     private func removeOwnSharedSummaries(from candidate: inout AppSnapshot) {
@@ -432,6 +477,14 @@ private enum DemoRecords {
         let habits = [("起身走一走", "figure.walk"), ("喝一杯水", "drop"), ("留一点空闲", "leaf")]
             .compactMap { try? HabitDefinition(title: $0.0, symbol: $0.1) }
         let checkIns = habits.prefix(1).compactMap { try? HabitCheckIn(habitID: $0.id, dayKey: DateRules.dayKey(for: now), isComplete: true) }
-        return AppSnapshot(entries: entries, habits: habits, checkIns: checkIns)
+        let sleepHours = [7.4, 6.8, 8.1, 7.2, 7.7, 6.5, 8.0, 7.5, 7.1, 8.2, 6.9, 7.8, 7.3, 7.6]
+        let sleep = (0..<14).compactMap { offset -> SleepRecord? in
+            guard offset != 4 && offset != 9,
+                  let day = calendar.date(byAdding: .day, value: -offset, to: now),
+                  let end = calendar.date(bySettingHour: 7, minute: 10, second: 0, of: day), end <= now else { return nil }
+            return try? SleepRecord(bedtime: end.addingTimeInterval(-sleepHours[offset] * 3_600), wakeTime: end,
+                timeZoneIdentifier: TimeZone.current.identifier, note: "示例睡眠时段，不是真实健康测量。", modifiedAt: end)
+        }
+        return AppSnapshot(entries: entries, habits: habits, checkIns: checkIns, sleepRecords: sleep)
     }
 }

@@ -6,6 +6,7 @@ struct TodayView: View {
     @ObservedObject var model: AppModel
     let onRecord: () -> Void
     let onHabits: () -> Void
+    let onSleep: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -30,6 +31,7 @@ struct TodayView: View {
                 statistics
                 LazyVGrid(columns: supportingColumns, alignment: .leading, spacing: 20) {
                     habitsCard
+                    sleepCard
                     HealthReferenceCard(model: model)
                 }
                 recordsCard
@@ -146,6 +148,30 @@ struct TodayView: View {
                     ForEach(Array(model.activeHabits.prefix(3))) { habit in
                         HabitCompletionRow(model: model, habit: habit)
                     }
+                }
+            }
+        }
+    }
+
+    private var sleepCard: some View {
+        EnergyCard {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(alignment: .top) {
+                    SectionHeading(title: "睡眠观测", subtitle: "单独看看睡眠的节奏")
+                    Spacer(minLength: 8)
+                    Image(systemName: "moon.stars").font(.title2).foregroundStyle(EnergyStyle.forest)
+                }
+                if let observation = model.latestSleepObservation {
+                    SleepObservationContent(observation: observation, compact: true)
+                    Text(observation.isEstimated ? "按手动填写的时段估算，可能包含清醒时间。" : "开始和结束表示观测边界，不据此确定真正入睡或起床的时刻。")
+                        .font(.footnote).foregroundStyle(EnergyStyle.secondary).fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("暂无带时间信息的睡眠观测。可以手动补记，也可以按需连接 Apple 健康。")
+                        .font(.callout).foregroundStyle(EnergyStyle.secondary)
+                }
+                Button(action: onSleep) {
+                    Label("查看睡眠与补记", systemImage: "chevron.right")
+                        .font(.callout).frame(minHeight: 44, alignment: .leading)
                 }
             }
         }

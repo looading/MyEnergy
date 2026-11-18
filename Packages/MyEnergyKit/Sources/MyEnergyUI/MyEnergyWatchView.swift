@@ -1,7 +1,7 @@
 import SwiftUI
 import MyEnergyCore
 
-/// 手表围绕快记与习惯组织，一次只完成一件事。
+/// 手表提供快记、习惯和最近睡眠参考，一次只完成一件事。
 public struct MyEnergyWatchView: View {
     @ObservedObject private var model: AppModel
     @AppStorage("myenergy.hapticsEnabled") private var hapticsEnabled = true
@@ -42,6 +42,28 @@ public struct MyEnergyWatchView: View {
                     } else {
                         Text("还没有记录，\n从自己的感受开始。")
                             .font(.callout).foregroundStyle(.secondary).padding(.vertical, 4)
+                    }
+                }
+                Section("最近睡眠 · 独立参考") {
+                    if let observation = model.latestSleepObservation {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("\(observation.durationHours.formatted(.number.precision(.fractionLength(1)))) 小时", systemImage: "moon.stars")
+                                .font(.title3.weight(.medium)).monospacedDigit()
+                            Text(observation.isEstimated ? "自述时段估算" : "实际睡眠观测")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Text(observation.sourceTitle).font(.caption2).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text("开始 \(sleepDateText(observation.bedtime, timeZoneIdentifier: observation.timeZoneIdentifier))")
+                                .font(.caption2).foregroundStyle(.secondary)
+                            Text("结束 \(sleepDateText(observation.wakeTime, timeZoneIdentifier: observation.timeZoneIdentifier))")
+                                .font(.caption2).foregroundStyle(.secondary)
+                            Text("时区 \(observation.timeZoneIdentifier)").font(.caption2).foregroundStyle(.secondary)
+                            Text(observation.isEstimated ? "整个自述时段可能包含清醒时间。" : "起止时间为观测边界，无法确定真正入睡或起床时刻。")
+                                .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }.padding(.vertical, 4).accessibilityElement(children: .combine)
+                    } else {
+                        Text("暂无带时间信息的睡眠观测。可在 iPhone 上补记，或按需连接 Apple 健康。")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 Section("今天的小习惯") {

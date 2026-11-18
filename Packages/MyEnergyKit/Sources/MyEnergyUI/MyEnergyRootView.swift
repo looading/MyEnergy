@@ -65,7 +65,8 @@ public struct MyEnergyRootView: View {
     private func page(_ item: AppSection) -> some View {
         Group {
             switch item {
-            case .today: TodayView(model: model, onRecord: { showsEntry = true }, onHabits: { section = .habits })
+            case .today: TodayView(model: model, onRecord: { showsEntry = true }, onHabits: { section = .habits }, onSleep: { section = .sleep })
+            case .sleep: SleepView(model: model)
             case .trends: TrendsView(model: model)
             case .habits: HabitsView(model: model)
             case .settings: EnergySettingsView(model: model)
@@ -73,9 +74,11 @@ public struct MyEnergyRootView: View {
         }
         .navigationTitle(item.title)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button { showsEntry = true } label: { Label("记一下", systemImage: "plus") }
-                    .disabled(!model.canEdit).keyboardShortcut("n", modifiers: .command)
+            if item != .sleep {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showsEntry = true } label: { Label("记一下", systemImage: "plus") }
+                        .disabled(!model.canEdit).keyboardShortcut("n", modifiers: .command)
+                }
             }
             #if os(macOS)
             ToolbarItem(placement: .automatic) {
@@ -112,13 +115,13 @@ public struct MyEnergyRootView: View {
 
 #if !os(watchOS)
 private enum AppSection: String, CaseIterable, Identifiable {
-    case today, trends, habits, settings
+    case today, sleep, trends, habits, settings
     var id: Self { self }
     var title: String {
-        switch self { case .today: "今日"; case .trends: "趋势"; case .habits: "习惯"; case .settings: "我的" }
+        switch self { case .today: "今日"; case .sleep: "睡眠"; case .trends: "趋势"; case .habits: "习惯"; case .settings: "我的" }
     }
     var symbol: String {
-        switch self { case .today: "sun.max"; case .trends: "chart.xyaxis.line"; case .habits: "leaf"; case .settings: "person.crop.circle" }
+        switch self { case .today: "sun.max"; case .sleep: "moon.stars"; case .trends: "chart.xyaxis.line"; case .habits: "leaf"; case .settings: "person.crop.circle" }
     }
 }
 #endif

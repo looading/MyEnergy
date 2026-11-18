@@ -1,4 +1,5 @@
 import Foundation
+import MyEnergyCore
 
 struct HealthSleepInterval: Equatable, Sendable {
   let start: Date
@@ -7,6 +8,58 @@ struct HealthSleepInterval: Equatable, Sendable {
 }
 
 enum HealthSleepAnalyzer {
+  /// 先合并实际睡眠的重叠区间，再将间隔不超过三小时的区间归为一个展示片段。
+  /// 分组间隔不计入实际睡眠；未结束、未来或超过 24 小时的无效观测不会显示。
+  static func nights(intervals: [HealthSleepInterval], now: Date, timeZone: TimeZone = .current) -> [SleepNight] {
+    guard now.timeIntervalSinceReferenceDate.isFinite else { return [] }
+    let completed = intervals.compactMap { sample -> DateInterval? in
+      guard sample.isAsleep, sample.start.timeIntervalSinceReferenceDate.isFinite,
+            sample.end.timeIntervalSinceReferenceDate.isFinite, sample.end <= now,
+            sample.start < sample.end, sample.end.timeIntervalSince(sample.start) <= 24 * 3_600 else { return nil }
+      return DateInterval(start: sample.start, end: sample.end)
+    }.sorted { lhs, rhs in
+      lhs.start == rhs.start ? lhs.end < rhs.end : lhs.start < rhs.start
+    }
+    guard let first = completed.first else { return [] }
+    var union: [DateInterval] = []
+    var current = first
+    for range in completed.dropFirst() {
+      if range.start <= current.end {
+        current = DateInterval(start: current.start, end: max(current.end, range.end))
+      } else {
+        union.append(current)
+        current = range
+      }
+    }
+    union.append(current)
+
+    var nights: [SleepNight] = []
+    var bedtime = union[0].start
+    var wakeTime = union[0].end
+    var asleepSeconds = union[0].duration
+    func appendNight() {
+      // 过长的完整片段整体忽略，不裁剪成看似有效的观测。
+      if let night = try? SleepNight(bedtime: bedtime, wakeTime: wakeTime,
+                                    asleepSeconds: min(asleepSeconds, wakeTime.timeIntervalSince(bedtime)),
+                                    timeZoneIdentifier: timeZone.identifier, sourceDescription: "Apple 健康") {
+        nights.append(night)
+      }
+    }
+    for range in union.dropFirst() {
+      if range.start.timeIntervalSince(wakeTime) <= 3 * 3_600 {
+        wakeTime = range.end
+        asleepSeconds += range.duration
+      } else {
+        appendNight()
+        bedtime = range.start
+        wakeTime = range.end
+        asleepSeconds = range.duration
+      }
+    }
+    appendNight()
+    return nights
+  }
+
   /// 对实际睡眠区间求并集，避免多个设备、来源或睡眠阶段重复计时。
   static func asleepSeconds(intervals: [HealthSleepInterval], within window: DateInterval) -> Double {
     guard window.start.timeIntervalSince1970.isFinite, window.end.timeIntervalSince1970.isFinite,
