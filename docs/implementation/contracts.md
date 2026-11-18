@@ -195,3 +195,9 @@ AppModel 的 snapshot 真实数据空间使用磁盘，演示数据空间单独�
 独立 Node.js 服务，SQLite 持久化。`POST /v1/auth/challenge`，`POST /v1/auth/apple` 验证 Apple 公钥／签名、issuer、audience、exp 与一次性 nonce；开发身份仅在显式开启且绑定 loopback 时存在。响应为应用 session，不把 Apple identityToken 用作加密密钥。
 
 `GET /v1/vault` 返回 `{revision, ciphertext, mutationID}`；`PUT /v1/vault` 使用 `{expectedRevision, mutationID, ciphertext}` CAS，冲突返回 409；账户从 session 导出，不接受客户端用户 ID 来越权。`DELETE /v1/account` 删除 vault 并撤销账户会话，旧 token 不能复活数据。AES-GCM 密文在 Swift 客户端生成，AAD 绑定应用账户；服务端不持有恢复密钥。操作规模与正文大小有限制，错误响应不含令牌／用户正文。
+
+## 已集成的兼容补充
+
+AppSnapshot 追加默认空的 sharedHealthSummaries，旧 schema 1 解码兼容。SharedHealthSummary 只保存当前恢复参考、静息心率、睡眠汇总、来源和时间，不含原始历史。EntityKind 追加 healthSummary；关闭分享通过该类型 tombstone 删除，重新同意使用新 UUID。UI 默认关闭，账号切换清除临时授权，不自动移除上一空间已共享内容。
+
+Watch wire v2 追加因果 baseSnapshot；sendSnapshot(_:base:) 对 FIFO 待发送消息按前驱快照链接，ACK 回调成功持久化后才出队。完整快照加基线共用 60 KiB 上限。storageURL 的发布同步驱动账号 namespace，接收方再次核对空间。

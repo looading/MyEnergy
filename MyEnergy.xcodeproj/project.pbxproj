@@ -1,0 +1,699 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		46D15C252B723296F6A3BFDC /* MyEnergyWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970B955F0A818B343A355E0C /* MyEnergyWatchApp.swift */; };
+		7FEACBF0D725233C322FFFEA /* MyEnergyWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 6BAC50949D494095E577EDB2 /* MyEnergyWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		878A2C9F917DA17E0AD5378F /* MyEnergyUI in Frameworks */ = {isa = PBXBuildFile; productRef = FB050D72E521762519D36158 /* MyEnergyUI */; };
+		B31A7022A4A06C2DF07CE14E /* MyEnergyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3225BDBAF8B09B30F040AD5A /* MyEnergyUI */; };
+		C37687CF68E41CD0F62FE4A9 /* MyEnergyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF27FE51C5DE373FBE596CD3 /* MyEnergyApp.swift */; };
+		CC3F1EAE6CD86A964FFD6AA6 /* MyEnergyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF27FE51C5DE373FBE596CD3 /* MyEnergyApp.swift */; };
+		F6174972AC6FE0498806B39E /* MyEnergyUI in Frameworks */ = {isa = PBXBuildFile; productRef = 20F6D3A5F9979D59FEB375E7 /* MyEnergyUI */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AB19023A3AE05881F53A19A3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B0A2A2F50C11F95C6A07FEFE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 02449C33570AF3036D79C3D3;
+			remoteInfo = MyEnergyWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D9B3B20B7700318BA09BBACD /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				7FEACBF0D725233C322FFFEA /* MyEnergyWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		2EA2329C1C5AAA53F4A69D48 /* MyEnergyKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MyEnergyKit; path = Packages/MyEnergyKit; sourceTree = SOURCE_ROOT; };
+		30A3E899D2C9B22C5749BC8F /* MyEnergyMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyEnergyMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6BAC50949D494095E577EDB2 /* MyEnergyWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyEnergyWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		970B955F0A818B343A355E0C /* MyEnergyWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyEnergyWatchApp.swift; sourceTree = "<group>"; };
+		AF27FE51C5DE373FBE596CD3 /* MyEnergyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyEnergyApp.swift; sourceTree = "<group>"; };
+		C6EF6F5CB80DA3DAD966B46F /* MyEnergyiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MyEnergyiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6D308A754BF4E94743C5C862 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				878A2C9F917DA17E0AD5378F /* MyEnergyUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F9CC5D38F960E490C02A95B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6174972AC6FE0498806B39E /* MyEnergyUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA127F6D856AA21692BE6CF8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B31A7022A4A06C2DF07CE14E /* MyEnergyUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		02AF3E8E5ABBC77EAF368C5D /* MyEnergy */ = {
+			isa = PBXGroup;
+			children = (
+				AF27FE51C5DE373FBE596CD3 /* MyEnergyApp.swift */,
+			);
+			path = MyEnergy;
+			sourceTree = "<group>";
+		};
+		10A54BCB97DF365894E95B45 /* MyEnergyWatch */ = {
+			isa = PBXGroup;
+			children = (
+				970B955F0A818B343A355E0C /* MyEnergyWatchApp.swift */,
+			);
+			path = MyEnergyWatch;
+			sourceTree = "<group>";
+		};
+		6D44324320A9DCA26A185ED4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C6EF6F5CB80DA3DAD966B46F /* MyEnergyiOS.app */,
+				30A3E899D2C9B22C5749BC8F /* MyEnergyMac.app */,
+				6BAC50949D494095E577EDB2 /* MyEnergyWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9991CE8E005EC3CD17DDAA0D = {
+			isa = PBXGroup;
+			children = (
+				F745971DD30120E88F9A0911 /* Apps */,
+				C7E09C6A448FD18ADD6D05D6 /* Packages */,
+				6D44324320A9DCA26A185ED4 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C7E09C6A448FD18ADD6D05D6 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				2EA2329C1C5AAA53F4A69D48 /* MyEnergyKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		F745971DD30120E88F9A0911 /* Apps */ = {
+			isa = PBXGroup;
+			children = (
+				02AF3E8E5ABBC77EAF368C5D /* MyEnergy */,
+				10A54BCB97DF365894E95B45 /* MyEnergyWatch */,
+			);
+			path = Apps;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		02449C33570AF3036D79C3D3 /* MyEnergyWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 141F4CC1F3D2842BD8216FDF /* Build configuration list for PBXNativeTarget "MyEnergyWatch" */;
+			buildPhases = (
+				196583BEB19D0D98A6A027E0 /* Sources */,
+				8F9CC5D38F960E490C02A95B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MyEnergyWatch;
+			packageProductDependencies = (
+				20F6D3A5F9979D59FEB375E7 /* MyEnergyUI */,
+			);
+			productName = MyEnergyWatch;
+			productReference = 6BAC50949D494095E577EDB2 /* MyEnergyWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8038EA9E5E3B60C40D5527F3 /* MyEnergyMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1C396D20ED28C25424B3922 /* Build configuration list for PBXNativeTarget "MyEnergyMac" */;
+			buildPhases = (
+				FC98C3610160015CD8682DDC /* Sources */,
+				CA127F6D856AA21692BE6CF8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MyEnergyMac;
+			packageProductDependencies = (
+				3225BDBAF8B09B30F040AD5A /* MyEnergyUI */,
+			);
+			productName = MyEnergyMac;
+			productReference = 30A3E899D2C9B22C5749BC8F /* MyEnergyMac.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8D00731E119D46DED0A0FCF6 /* MyEnergyiOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 12C694ACE20479A1AC1BEE5C /* Build configuration list for PBXNativeTarget "MyEnergyiOS" */;
+			buildPhases = (
+				36C3ADE3657BAC089A18AF9B /* Sources */,
+				6D308A754BF4E94743C5C862 /* Frameworks */,
+				D9B3B20B7700318BA09BBACD /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				096CAF8D82B315C4FAEFE45C /* PBXTargetDependency */,
+			);
+			name = MyEnergyiOS;
+			packageProductDependencies = (
+				FB050D72E521762519D36158 /* MyEnergyUI */,
+			);
+			productName = MyEnergyiOS;
+			productReference = C6EF6F5CB80DA3DAD966B46F /* MyEnergyiOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B0A2A2F50C11F95C6A07FEFE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					02449C33570AF3036D79C3D3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					8038EA9E5E3B60C40D5527F3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					8D00731E119D46DED0A0FCF6 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = DD685455E5C37DA998DC94F0 /* Build configuration list for PBXProject "MyEnergy" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9991CE8E005EC3CD17DDAA0D;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8BB6C96036F6B50347B90A3E /* XCLocalSwiftPackageReference "Packages/MyEnergyKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6D44324320A9DCA26A185ED4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8038EA9E5E3B60C40D5527F3 /* MyEnergyMac */,
+				8D00731E119D46DED0A0FCF6 /* MyEnergyiOS */,
+				02449C33570AF3036D79C3D3 /* MyEnergyWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		196583BEB19D0D98A6A027E0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				46D15C252B723296F6A3BFDC /* MyEnergyWatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36C3ADE3657BAC089A18AF9B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C37687CF68E41CD0F62FE4A9 /* MyEnergyApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FC98C3610160015CD8682DDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC3F1EAE6CD86A964FFD6AA6 /* MyEnergyApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		096CAF8D82B315C4FAEFE45C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 02449C33570AF3036D79C3D3 /* MyEnergyWatch */;
+			targetProxy = AB19023A3AE05881F53A19A3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		209F0A39B7CF51285D7E1A20 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				INFOPLIST_FILE = "Configuration/Mac-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.mac;
+				PRODUCT_NAME = MyEnergy;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		26B30A2D3EB3F8F686847211 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		3B5A18AF17F0849F4D05AFF1 /* DeviceDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/Mac.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				INFOPLIST_FILE = "Configuration/Mac-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.mac;
+				PRODUCT_NAME = MyEnergy;
+				SDKROOT = macosx;
+			};
+			name = DeviceDebug;
+		};
+		47DE13179160A73137DD2B1B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/Watch.entitlements;
+				INFOPLIST_FILE = "Configuration/Watch-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.ios.watchkitapp;
+				PRODUCT_NAME = MyEnergyWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		8D54FD0627D28557E6B9EBB5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		A65B86DE9D14EC47BCACD1CF /* DeviceDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/iOS.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Configuration/iOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.ios;
+				PRODUCT_NAME = MyEnergy;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = DeviceDebug;
+		};
+		B0FF4B06686FE6C63AA89496 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/iOS.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Configuration/iOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.ios;
+				PRODUCT_NAME = MyEnergy;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BA4635D3678BFD1586F779E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Configuration/iOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.ios;
+				PRODUCT_NAME = MyEnergy;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CEFB33DAF56BD715144EBF98 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = "Configuration/Watch-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.ios.watchkitapp;
+				PRODUCT_NAME = MyEnergyWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+		CF02533F18A3461FDA669208 /* DeviceDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/Watch.entitlements;
+				INFOPLIST_FILE = "Configuration/Watch-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.ios.watchkitapp;
+				PRODUCT_NAME = MyEnergyWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = DeviceDebug;
+		};
+		D76F72A89A3ECBAE53AD05E7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/Mac.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				INFOPLIST_FILE = "Configuration/Mac-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.myenergy.mac;
+				PRODUCT_NAME = MyEnergy;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D8B43B3CB045774955947793 /* DeviceDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = DeviceDebug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		12C694ACE20479A1AC1BEE5C /* Build configuration list for PBXNativeTarget "MyEnergyiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA4635D3678BFD1586F779E2 /* Debug */,
+				A65B86DE9D14EC47BCACD1CF /* DeviceDebug */,
+				B0FF4B06686FE6C63AA89496 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		141F4CC1F3D2842BD8216FDF /* Build configuration list for PBXNativeTarget "MyEnergyWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEFB33DAF56BD715144EBF98 /* Debug */,
+				CF02533F18A3461FDA669208 /* DeviceDebug */,
+				47DE13179160A73137DD2B1B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DD685455E5C37DA998DC94F0 /* Build configuration list for PBXProject "MyEnergy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8D54FD0627D28557E6B9EBB5 /* Debug */,
+				D8B43B3CB045774955947793 /* DeviceDebug */,
+				26B30A2D3EB3F8F686847211 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E1C396D20ED28C25424B3922 /* Build configuration list for PBXNativeTarget "MyEnergyMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				209F0A39B7CF51285D7E1A20 /* Debug */,
+				3B5A18AF17F0849F4D05AFF1 /* DeviceDebug */,
+				D76F72A89A3ECBAE53AD05E7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8BB6C96036F6B50347B90A3E /* XCLocalSwiftPackageReference "Packages/MyEnergyKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MyEnergyKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		20F6D3A5F9979D59FEB375E7 /* MyEnergyUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MyEnergyUI;
+		};
+		3225BDBAF8B09B30F040AD5A /* MyEnergyUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MyEnergyUI;
+		};
+		FB050D72E521762519D36158 /* MyEnergyUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MyEnergyUI;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = B0A2A2F50C11F95C6A07FEFE /* Project object */;
+}

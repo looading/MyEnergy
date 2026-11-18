@@ -1,0 +1,127 @@
+name: MyEnergy
+options:
+  bundleIdPrefix: dev.myenergy
+  deploymentTarget:
+    iOS: '17.0'
+    macOS: '14.0'
+    watchOS: '10.0'
+  createIntermediateGroups: true
+configs:
+  Debug: debug
+  DeviceDebug: debug
+  Release: release
+packages:
+  MyEnergyKit:
+    path: Packages/MyEnergyKit
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    MARKETING_VERSION: '0.1.0'
+    CURRENT_PROJECT_VERSION: '1'
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ''
+  configs:
+    Debug:
+      CODE_SIGNING_ALLOWED: NO
+targets:
+  MyEnergyMac:
+    type: application
+    platform: macOS
+    sources: [Apps/MyEnergy]
+    dependencies:
+      - package: MyEnergyKit
+        product: MyEnergyUI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.myenergy.mac
+        PRODUCT_NAME: MyEnergy
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_USER_SELECTED_FILES: readwrite
+        ENABLE_OUTGOING_NETWORK_CONNECTIONS: YES
+      configs:
+        DeviceDebug:
+          CODE_SIGN_ENTITLEMENTS: Configuration/Mac.entitlements
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Configuration/Mac.entitlements
+    info:
+      path: Configuration/Mac-Info.plist
+      properties:
+        CFBundleDisplayName: MyEnergy
+        LSApplicationCategoryType: public.app-category.healthcare-fitness
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    scheme:
+      build:
+        targets:
+          MyEnergyMac: all
+      run:
+        config: Debug
+  MyEnergyiOS:
+    type: application
+    platform: iOS
+    sources: [Apps/MyEnergy]
+    dependencies:
+      - package: MyEnergyKit
+        product: MyEnergyUI
+      - target: MyEnergyWatch
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.myenergy.ios
+        PRODUCT_NAME: MyEnergy
+        TARGETED_DEVICE_FAMILY: '1,2'
+        SUPPORTS_MACCATALYST: NO
+      configs:
+        DeviceDebug:
+          CODE_SIGN_ENTITLEMENTS: Configuration/iOS.entitlements
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Configuration/iOS.entitlements
+    info:
+      path: Configuration/iOS-Info.plist
+      properties:
+        CFBundleDisplayName: MyEnergy
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSHealthShareUsageDescription: 读取心率变异性、静息心率和睡眠记录，供你观察身体恢复变化；这些数据与主观精力和心情分开展示。
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    scheme:
+      build:
+        targets:
+          MyEnergyiOS: all
+      run:
+        config: Debug
+  MyEnergyWatch:
+    type: application
+    platform: watchOS
+    sources: [Apps/MyEnergyWatch]
+    dependencies:
+      - package: MyEnergyKit
+        product: MyEnergyUI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.myenergy.ios.watchkitapp
+        PRODUCT_NAME: MyEnergyWatch
+        SKIP_INSTALL: YES
+      configs:
+        DeviceDebug:
+          CODE_SIGN_ENTITLEMENTS: Configuration/Watch.entitlements
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Configuration/Watch.entitlements
+    info:
+      path: Configuration/Watch-Info.plist
+      properties:
+        CFBundleDisplayName: MyEnergy
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: dev.myenergy.ios
+        WKRunsIndependentlyOfCompanionApp: false
+        NSHealthShareUsageDescription: 在你同意后读取身体数据作为恢复参考，不推断心情。
+    scheme:
+      build:
+        targets:
+          MyEnergyWatch: all
+      run:
+        config: Debug

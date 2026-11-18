@@ -13,7 +13,7 @@ let package = Package(
     .target(name: "MyEnergyCore"),
     .target(name: "MyEnergyPlatform", dependencies: ["MyEnergyCore"]),
     .target(name: "MyEnergyUI", dependencies: ["MyEnergyCore", "MyEnergyPlatform"]),
-    .testTarget(name: "MyEnergyCoreTests", dependencies: ["MyEnergyCore", "MyEnergyPlatform"])
+    .testTarget(name: "MyEnergyCoreTests", dependencies: ["MyEnergyCore", "MyEnergyPlatform", "MyEnergyUI"])
   ],
   swiftLanguageModes: [.v6]
 )
