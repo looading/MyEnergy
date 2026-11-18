@@ -321,13 +321,13 @@ public final class WatchBridge: NSObject {
       if !queued.contains(message.eventID) { session.transferUserInfo([Self.payloadKey: data]) }
       #endif
       if session.isReachable {
-        session.sendMessageData(data, replyHandler: { [weak self] reply in
+        session.sendMessageData(data, replyHandler: { @Sendable [weak self] reply in
           Task { @MainActor in
             guard let self else { return }
             do { try await self.processReply(reply, for: message) }
             catch { self.reportSendError(error, for: message) }
           }
-        }, errorHandler: { [weak self] error in
+        }, errorHandler: { @Sendable [weak self] error in
           Task { @MainActor in self?.reportSendError(error, for: message) }
         })
       }
@@ -479,7 +479,7 @@ public final class WatchBridge: NSObject {
     session.transferUserInfo([Self.payloadKey: data])
     #endif
     if session.isReachable {
-      session.sendMessageData(data, replyHandler: nil) { [weak self] error in
+      session.sendMessageData(data, replyHandler: nil) { @Sendable [weak self] error in
         Task { @MainActor in self?.reportBackgroundTransferError(error, messageData: data) }
       }
     }

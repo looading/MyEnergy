@@ -79,8 +79,18 @@ git diff --check
 
 - [x] 前台 ACK 与就绪恢复实现；独立复核的两项状态显示 P2 已修复并关闭。
 - [x] 完整 130 项 Swift（41 XCTest、89 Swift Testing）与 8 项 Node 通过；双端 DeviceDebug 构建重装及最终 Watch／iOS／Mac 通用构建通过。
-- [ ] 重新安装后验证 Watch → iPhone 实际记录；反向传输和后台路径各自记录结果。
+- [x] 重新安装后实际 Watch → iPhone 记录到达；Phone → Watch 验收习惯可见，Watch 完成／撤销分别在 Phone 显示 1/1／0/1。
+- [ ] 真机后台传输、断连恢复和真实账号空间仍按设备矩阵验证。
 
 实际界面部分已有证据：42 mm Watch 首页、快记、保存确认和返回后的 1 条虚构本机记录；iPhone 首页空态和主屏图标。Mac 再次锁屏后已请求用户手动解锁，修复版重开与传输恢复仍待验证，健康／睡眠／习惯／主题选择等界面也未计为通过。运行时和安装已就绪，当前不把解锁条件写成 runtime 缺失。
 
 随后窗口恢复可用，已重开修复版 iPhone；Watch 尚未重开。Device Hub 当前出现系统配对提示并持续切换设备，等待确认继续专用模拟器还是处理真机后，再验证实际 ACK 与余下界面。
+
+## SDK 回调隔离与原生复验 W6
+
+实际重开 Watch 后发现后台 reply block 进入时触发 Swift actor 检查，异常为 EXC_BREAKPOINT／SIGTRAP；在内部 Task 切主 actor 之前已退出。依据系统栈，将三处 WCSession 即时 reply／error 外层闭包显式标记为 @Sendable，内部仍由 Task 进入 MainActor。HealthKit 的三个 SDK block 已有 NS_SWIFT_SENDABLE 声明，经单独核对无需同类修改。
+
+修复版双端 SDK 构建和重装通过，原 Watch 记录到达 Phone，两端队列均清空；Watch 进程仍运行且未见新崩溃。Phone 创建验收习惯、Watch 完成与撤销、Phone 对应变化均有原生 UI 证据。Watch 重启后原记录和启动器图标也已观察。健康参考页可进入，连接按钮可见；点击前 Mac 再锁屏，授权与后续健康／睡眠界面继续待用户解锁，不记为通过。
+
+- [x] SDK 回调隔离修复及真实双向前台复现路径通过。
+- [ ] 记录最终回归和三目标构建结果；继续健康、睡眠和主题 UI 验收。

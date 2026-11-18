@@ -1,25 +1,28 @@
 # 首版验证报告
 
-日期：2026-11-18。范围为本地 MVP、睡眠观测、二维状态主题、Watch 本机功能补齐、通用目标编译和开发身份加密同步。W5 前台 ACK、就绪恢复和中文状态已实现，最新完整回归为 130 项 Swift／8 项 Node 全通过；review 问题全部复核关闭，修复版 SDK／generic 构建及两端安装通过。实际 UI 仍为修复前 Watch 本机保存 1 条、Phone 空态及图标证据；修复版已重装并重开 iPhone，Watch 尚未重开验证实际 ACK 恢复。Mac 第二次锁屏后已恢复可用；Device Hub 出现系统配对提示，待确认验收设备后继续余下 UI，真实四端账号互联和发布尚未验收。
+日期：2026-11-18。范围为本地 MVP、睡眠观测、二维状态主题、Watch 本机功能补齐、通用目标编译和开发身份加密同步。最终 WCSession 回调修复后的 130 Swift／8 Node、三个 generic 目标与 DeviceDebug 双端 SDK 构建安装全部通过，独立 review 确认修复合理且无同类遗漏。专用模拟器已实际验证记录到达 Phone、跨端习惯完成／撤销、产品 ACK／FIFO 恢复、重启保留及双端图标；观察时两端 pending 0，Watch 进程 1，无新增 crash。身体参考页已进入，连接前第三次锁屏，尚未授权或查询；余下睡眠、主题和完整示例等 UI 待续，真实健康、真机后台和发布尚未验收。
 
 ## 已通过检查
 
 | 检查 | 命令与条件 | 结果 |
 | --- | --- | --- |
-| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | W5 修复后 130 项通过：41 XCTest、89 Swift Testing；另有 8 项 Node，0 失败、0 跳过，双客户端及账号生命周期全部实际执行 |
+| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 最终 W6 修复后 130 项通过：41 XCTest、89 Swift Testing；另有 8 项 Node，0 失败、0 跳过，双客户端及账号生命周期全部实际执行 |
 | 服务 | `node --test server/test/*.test.mjs` | 8 项通过，0 失败 |
 | MyEnergyUI | `swift build --package-path Packages/MyEnergyKit --target MyEnergyUI`；本轮完整 Swift 回归 | 二维主题阶段独立构建通过；Watch 补齐后的共享包随最新回归通过 |
-| Mac | `./scripts/build.sh MyEnergyMac` | W5 修复后 generic 目标 `BUILD SUCCEEDED`；本轮未改动已有 Mac 数据，历史实际启动证据保留 |
-| iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | W5 修复后 generic 目标 `BUILD SUCCEEDED`，包含 Watch companion |
-| Watch | `./scripts/build.sh MyEnergyWatch` | W5 修复后独立 scheme generic 目标 `BUILD SUCCEEDED` |
+| Mac | `./scripts/build.sh MyEnergyMac` | 最终 W6 修复后 generic 目标 `BUILD SUCCEEDED`；本轮未改动已有 Mac 数据，历史实际启动证据保留 |
+| iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | 最终 W6 修复后 generic 目标 `BUILD SUCCEEDED`，包含 Watch companion |
+| Watch | `./scripts/build.sh MyEnergyWatch` | 最终 W6 修复后独立 scheme generic 目标 `BUILD SUCCEEDED` |
 | 配置 | `plutil -lint Configuration/*.plist Configuration/*.entitlements`、`zsh -n scripts/*.sh` | 历史静态检查通过；新增模拟器准备路径在本轮 `--prepare-only` 实际执行成功 |
 | 模拟器环境 | Xcode 官方 runtime 安装及专用设备准备 | iOS 27.2、watchOS 27.2 runtime 已可用；专用 iPhone 18 Pro／Apple Watch Series 12（42 mm）已启动并配对 |
-| 模拟器构建与安装 | `./scripts/run-watch.sh --prepare-only` 及 W5 DeviceDebug 双端 SDK 构建安装 | 修复版 iPhone／Watch 构建、安装通过；此前实际 arm64 可执行文件内嵌 `com.apple.developer.healthkit=true` 检查证据保留，重装后 iPhone 已重开，Watch 尚未重开 |
-| 独立复核 | 旧确认与 W5 修复及直接依赖 | 旧确认及 W5 两条 P2 均修复并复核关闭，当前未解决确认 P1／P2 为 0；实际配对恢复仍待 UI 验收 |
-| Watch 部分 UI | Device Hub 专用 42 mm Watch，虚构验收输入 | 实际打开首页与快记，保存后显示“手表本机已保存”，完成返回首页显示 1 条记录；尚未验证重启保留或传到手机 |
-| iPhone 部分 UI | 专用 iPhone 主屏及应用首页 | 已看到蓝绿 e 形图案与金星图标，MyEnergy 运行于 0 条记录空态；未收到 Watch 新记录 |
+| 模拟器构建与安装 | `./scripts/run-watch.sh --prepare-only` 及 W6 DeviceDebug 双端 SDK 重建重装 | 最后三个 `@Sendable` 回调修复后的 iPhone／Watch 构建、安装及实际运行通过；此前 HealthKit entitlement 检查证据保留 |
+| 独立复核 | 旧确认、W5 状态及 W6 回调修复 | 既有 P2 均修复并复核关闭，未解决确认 P1／P2 为 0；三个 `@Sendable` 修复确认合理且无同类遗漏 |
+| Watch 本机 UI | Device Hub 专用 42 mm Watch，虚构验收输入 | 快记本机保存，重启后原记录保留；启动器品牌图标可见；身体页未连接说明和按钮可见，尚未点击连接 |
+| 双向前台与 ACK | 专用配对模拟器，虚构记录和验收习惯 | Phone 收到 Watch 原有 1 条记录；Phone 新建习惯到 Watch，Watch 完成／撤销后 Phone 为 1／1、0／1；两端 pending 0，产品 ACK／FIFO 恢复通过 |
+| 运行观察 | 最后 SDK 重装后的验收窗口 | 两端均 1 记录／1 习惯／1 条 isComplete=false 打卡，pending 0；Watch 进程 1，除 20:38 旧 crash 报告外无新报告 |
 
-W5 最新完整回归日志为 `watch-foreground-tests.log`，130 项 Swift 与 8 项 Node 全通过。修复后的 DeviceDebug 双端 SDK 构建安装日志为 `watch-foreground-simulator-build.log`；generic 三目标日志分别为 `foreground-MyEnergyWatch.log`、`foreground-MyEnergyiOS.log`、`foreground-MyEnergyMac.log`，均成功。
+最终 W6 完整回归日志为 `watch-final-tests.log`，41 XCTest＋89 Swift Testing，共 130 Swift，另有 8 Node，0 失败、0 跳过。最后 SDK 回调修复后 DeviceDebug 双端重建重装通过；最终 generic 日志为 `final-MyEnergyWatch.log`、`final-MyEnergyiOS.log`、`final-MyEnergyMac.log`，全部 `BUILD SUCCEEDED`。
+
+W5 阶段 `watch-foreground-tests.log`、`watch-foreground-simulator-build.log` 及三份 `foreground-MyEnergy*.log` 均通过，作为最后三个回调修复之前的阶段证据保留。
 
 主题阶段 theme-tests.log、早期 swift-tests.log／server-tests.log、build-mac／build-ios／build-watch.log，以及旧确认阶段的三份 completion 日志和 `watch-simulator-prepare.log` 保留为历史证据。日志均未纳入 Git。AppIntents 元数据提示表示未依赖该框架而跳过提取，不影响构建。
 
@@ -41,8 +44,7 @@ Watch 回归覆盖异步 namespace 串行／合并、旧账号队列隔离、ACK
 
 | 项目 | 缺口 |
 | --- | --- |
-| iPhone／iPad／Watch UI 实际运行 | Watch 首页、快记本机保存及 Phone 空态／主屏图标已观察；健康授权、睡眠、习惯、主题选项、重启及辅助功能仍未验收，iPad 专项未运行。Device Hub 系统配对操作占用窗口，余下 UI 待继续 |
-| W5 配对前台记录传输实际恢复 | 工程修复、130 Swift／8 Node 回归和 SDK／generic 构建安装已通过；修复版 Watch 尚未重开，实际 ACK／队列恢复未验收。Phone → Watch 主动发送所需的安装／可达状态仍待核实 |
+| 其余 iPhone／iPad／Watch UI | 双向前台习惯、ACK／FIFO、重启保留与图标已通过；Watch 身体页入口可见但未点击连接。健康授权／查询、睡眠详情、新主题选择、完整示例隔离与完整辅助功能仍未验收，iPad 专项未运行；第三次 Mac 锁屏暂停余下操作 |
 | Apple Health 真数据 | 需要签名、授权及有历史样本的设备 |
 | Watch 后台互联 | 需要配对 iPhone／Watch，验证断连、后台、切账号和重启 |
 | 真实 Apple 身份 | 需要开发者团队、App ID 分组、签名与 audience；当前为受控签名夹具及开发身份 |
@@ -113,11 +115,13 @@ Xcode 官方 iOS 27.2 和 watchOS 27.2 runtime 已安装可用，专用 iPhone 1
 
 Xcode 27.2 的模拟器前端为 Device Hub，可从 Xcode → Open Developer Tool 打开。脚本优先打开 Device Hub，旧环境回退 Simulator。用户手动解锁后，CUA 在专用 42 mm Watch 实际打开 MyEnergy 首页与快记，完成保存并看到“手表本机已保存”；点击完成返回首页，最近记录为 1 条。这是专用模拟器中的虚构验收记录，不是真实用户健康数据。Phone 主屏已显示蓝绿 e 形图案与金星图标，打开 MyEnergy 可运行于 0 条记录空态。
 
-Mac 随后再次自动锁屏，已再次异步请求用户手动解锁，CUA 暂不继续 UI。待补证据包括 W5 修复后的 Watch → Phone 记录与 ACK、重启保留、独立心情与主题预览、习惯完成／撤销、睡眠缺失与来源、健康授权／身体入口与无样本、匿名共享限制、设置与示例隔离、窄屏及动态字体。上述项目仍未验收；runtime、安装和已经观察的快记不再归入未运行。已有 Mac 本机数据本轮不作改动。
+后续实际交互已补齐：Phone 收到 Watch 原有 1 条虚构记录，metadata 两端 pending 0；Watch 重启后原记录保留，启动器可见品牌图标。Phone 创建“验收习惯·起身走走”实际传到 Watch；Watch 完成后 Phone 界面显示 1／1，Watch 再撤销后 Phone 为 0／1。双向前台、产品 ACK 和 FIFO 恢复已实测通过，不再列为待核。最新 metadata 两端均 1 记录、1 习惯、1 条 isComplete=false 打卡，pending 0。
+
+Watch 身体参考页已实际进入，未连接说明与 Connect 按钮可见；点击前 Mac 第三次锁屏使工具拒绝操作，未发起授权、未查询。root 已异步请用户决定继续或先保留成果。睡眠详情、新主题选择、完整示例隔离及完整辅助功能仍未验收；模型注入测试不作为实际授权证据。已有 Mac 本机数据本轮不作改动。
 
 模拟器不能提供真实传感器或用户日常健康历史，也不能替代真实系统授权、后台配对送达、真机断连恢复和功耗验收。本轮没有新增独立 Watch 云登录、后台采样、widget、睡眠质量或压力分数；这些平台和范围边界继续保留。
 
-最新窗口情况：第二次锁屏后已恢复可用，修复版 iPhone 已重开，仍显示 0 条记录；Watch 仍在表盘，尚未重开新版本。Device Hub 随后出现“Unable to Pair”系统提示，窗口持续变化，已询问继续专用模拟器还是处理连接的真机。该提示不作为应用代码失败，也不作为新 ACK 已恢复的证据。
+此前 Device Hub 的“Unable to Pair”系统提示未作为应用代码失败或 ACK 恢复证据。设备偏好问题仍未答复，root 按已批准范围继续专用模拟器，双向前台实测随后完成，未处理用户连接的真机。
 
 ## 应用图标增量
 
@@ -127,11 +131,11 @@ Mac 随后再次自动锁屏，已再次异步请求用户手动解锁，CUA 暂
 
 图标版随后通过 `run-watch.sh --prepare-only` 的 DeviceDebug 构建，并重新安装到同一组专用 iPhone／Watch，日志为 icon-simulator-prepare.log。专用 pair 复用检查确认未新建额外设备。
 
-主图、各平台资源和完整提示词见[图标说明](../design/app-icon.md)。专用 iPhone 主屏图标已实际观察，通知、设置和其他平台系统入口继续待验收。
+主图、各平台资源和完整提示词见[图标说明](../design/app-icon.md)。专用 iPhone 主屏与 Watch 启动器品牌图标已实际观察，通知、设置和其他平台系统入口继续待验收。
 
-## W5 工程修复与实际恢复待验收
+## W5 工程修复与实际前台恢复
 
-修复前 Watch 保存的 1 条虚构记录未到 Phone。两端确已安装、pair connected；当时 Phone WCSession 为 paired YES、appInstalled NO、reachable NO，Watch 为 companionInstalled YES、reachable YES。该观测不表示 Simulator 的 isWatchAppInstalled 恒为 false，修复后 Phone → Watch 主动发送所需的安装／可达状态仍待核实。
+修复前 Watch 保存的 1 条虚构记录未到 Phone。两端确已安装、pair connected；当时 Phone WCSession 为 paired YES、appInstalled NO、reachable NO，Watch 为 companionInstalled YES、reachable YES。该观测不表示 Simulator 的 isWatchAppInstalled 恒为 false；后续 Phone 主动新增习惯已实际到 Watch，不再将前台主动发送列为待核。
 
 证据显示 Watch 队首较早的空 snapshot 已进入 Phone receivedIDs 并完成落盘，接收路径并未完全失败，也不是 namespace 拒收。Phone 独立 transferUserInfo ACK 返回失败，FIFO 仍等待队首确认，因此挡住后面的 1 条记录。
 
@@ -139,4 +143,16 @@ Apple 官方文档明确 [Simulator 不支持 transferUserInfo(_:)](https://deve
 
 review 另确认两条 P2：namespace 发布真实错误的显示顺序，以及生产后台迟到错误覆盖状态。两项均已修复，复核全部关闭，当前未解决确认 P1／P2 为 0。相较 124 项基线新增 6 项 XCTest；最新完整 `test-local.sh` 为 41 XCTest＋89 Swift Testing，共 130 Swift，另有 8 Node，0 失败、0 跳过。DeviceDebug 双端 SDK 构建安装与 Watch／iOS（含 Watch）／Mac generic 构建均通过，具体日志见本报告首表后的记录。
 
-上述结论为工程验证通过。修复版已重装，但 Mac 第二次锁屏后仍等待用户“已再次解锁”的答复，尚未重新打开应用，未实际验证 ACK、FIFO 队列及 Watch 记录恢复。已知 UI 仍是旧版 Watch 本机 1 条、Phone 0 条，以及已显示的 Phone 图标；不能把单测或安装成功写成实际同步恢复。健康授权、睡眠、习惯及主题选项仍未操作，真机后台传输与功耗继续留待后续验证。
+后续实测已证明双向前台、产品 ACK 与 FIFO 恢复：Phone 收到 Watch 原记录，Phone 习惯传到 Watch，Watch 完成／撤销更新 Phone；两端 metadata pending 0。该结论来自实际 UI 和持久队列观测，不依赖单测代替。真机后台传输与功耗继续留待后续验证。
+
+## W6 SDK 回调断言崩溃与最终验证
+
+20:38 前台 reply 实测出现一次 Watch EXC_BREAKPOINT／SIGTRAP：后台 WCSession 进入被隐式 MainActor 隔离的外层 closure，在创建 Task 之前触发断言。root 给三个 SDK 即时 reply／error 外层 closure 显式添加 `@Sendable`，保留内部 Task 的 MainActor 隔离。DeviceDebug 双端 SDK 重建重装通过；独立 review 确认三处修复合理，无同类遗漏。
+
+修复后实际双向习惯与 ACK／FIFO 路径通过。最新观察 Watch 进程为 1，除 20:38 旧报告外无新 crash；两端 metadata 均为 1 记录／1 习惯／1 条未完成打卡、pending 0。这只证明本次运行窗口，无长期稳定性或后台结论。
+
+最后源码对应的 `watch-final-tests.log` 为 130 Swift（41 XCTest＋89 Swift Testing）及 8 Node，0 失败、0 跳过；`final-MyEnergyWatch.log`、`final-MyEnergyiOS.log`、`final-MyEnergyMac.log` 均 `BUILD SUCCEEDED`。HealthKit SDK 的 NS_SWIFT_SENDABLE 静态核对通过，HealthDataClient 未改动。
+
+第三次锁屏发生在 Watch 身体页点击连接之前，未发起健康授权或查询。最新 CUA 仍确认锁屏，第三次解锁请求待用户答复，暂不再开展 UI；用户回复后再继续健康、睡眠、主题和完整示例等验收。前台联通通过不扩展为真实健康、真机后台或发布通过。
+
+操作状态备注：Device Hub 的临时 ViewFilter 目前为 Simulators，因锁屏尚未恢复原 All Devices，后续解锁后需还原。这是开发工具的显示筛选，不是应用设置更改或真机能力验证。
