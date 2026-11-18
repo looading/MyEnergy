@@ -5,11 +5,25 @@ import CryptoKit
 import MyEnergyCore
 import MyEnergyPlatform
 
+/// 账号生命周期只依赖这三个安全存储操作，测试可使用独立的内存实现。
+@MainActor
+protocol AccountSecretsStore {
+  func read(key: String) throws -> Data?
+  func write(_ data: Data, key: String) throws
+  func delete(key: String) throws
+}
+
+private struct KeychainAccountSecretsStore: AccountSecretsStore {
+  func read(key: String) throws -> Data? { try KeychainStore.read(key: key) }
+  func write(_ data: Data, key: String) throws { try KeychainStore.write(data, key: key) }
+  func delete(key: String) throws { try KeychainStore.delete(key: key) }
+}
+
 @MainActor
 final class AccountController: ObservableObject {
   static let shared = AccountController()
   @Published var session: AccountSession?
-  @Published var serverAddress = UserDefaults.standard.string(forKey: "MyEnergy.server") ?? "http://127.0.0.1:8787"
+  @Published var serverAddress: String
   @Published var developmentName = "myenergy-demo"
   @Published var recoveryInput = ""
   @Published var revealedRecoveryKey: String?
@@ -18,20 +32,46 @@ final class AccountController: ObservableObject {
   @Published var conflictCount = 0
   @Published var fingerprint = ""
   private let apple = AppleSignInCoordinator()
+  private let secrets: any AccountSecretsStore
+  private let preferences: UserDefaults
+  private let anonymousRecordsURL: URL
+  private let storageRoot: URL
+  private let activationPrepared: (@MainActor () async -> Void)?
   private var service: SyncService?
   private var key: Data?
   private var restored = false
   var canSync: Bool { session != nil && service != nil }
 
+  convenience init() {
+    self.init(secrets: KeychainAccountSecretsStore(), preferences: .standard,
+      anonymousRecordsURL: AppModel.defaultStorageURL)
+  }
+
+  init(secrets: any AccountSecretsStore, preferences: UserDefaults, anonymousRecordsURL: URL, storageRoot: URL? = nil,
+    activationPrepared: (@MainActor () async -> Void)? = nil) {
+    self.secrets = secrets
+    self.preferences = preferences
+    self.anonymousRecordsURL = anonymousRecordsURL
+    self.storageRoot = storageRoot ?? anonymousRecordsURL.deletingLastPathComponent()
+    self.activationPrepared = activationPrepared
+    serverAddress = preferences.string(forKey: "MyEnergy.server") ?? "http://127.0.0.1:8787"
+  }
+
   private var serverScope: String {
-    SHA256.hash(data: Data(serverAddress.utf8)).prefix(12).map { String(format: "%02x", $0) }.joined()
+    Self.scope(for: serverAddress)
+  }
+  private static func scope(for address: String) -> String {
+    SHA256.hash(data: Data(address.utf8)).prefix(12).map { String(format: "%02x", $0) }.joined()
   }
   private var sessionKey: String { "session.\(serverScope)" }
   private func keyName(_ accountID: String) -> String { "vault.\(serverScope).\(accountID)" }
   private func accountURL(_ accountID: String) throws -> URL {
+    try accountURL(accountID, scope: serverScope)
+  }
+  private func accountURL(_ accountID: String, scope: String) throws -> URL {
     guard UUID(uuidString: accountID) != nil else { throw VaultError.invalidResponse }
-    return AppModel.defaultStorageURL.deletingLastPathComponent()
-      .appendingPathComponent("accounts", isDirectory: true).appendingPathComponent(serverScope, isDirectory: true)
+    return storageRoot
+      .appendingPathComponent("accounts", isDirectory: true).appendingPathComponent(scope, isDirectory: true)
       .appendingPathComponent(accountID, isDirectory: true).appendingPathComponent("records.json")
   }
   private func client() throws -> AccountClient {
@@ -39,19 +79,23 @@ final class AccountController: ObservableObject {
     return try AccountClient(baseURL: url)
   }
   func restore(model: AppModel) async {
-    guard !restored, !model.isDemo else { return }
+    guard !restored, !isBusy, !model.isDemo else { return }
+    isBusy = true
+    defer { isBusy = false }
     restored = true
+    let restoringAddress = serverAddress
     do {
-      guard let data = try KeychainStore.read(key: sessionKey) else { return }
+      guard let data = try secrets.read(key: sessionKey) else { return }
       let saved = try JSONDecoder().decode(AccountSession.self, from: data)
       guard !saved.isExpired else { message = "登录已到期，本机记录仍保留；请重新登录。"; return }
-      try await activate(saved, model: model)
+      try await activate(saved, model: model, address: restoringAddress)
     } catch { message = error.localizedDescription }
   }
   func login(model: AppModel, development: Bool) async {
     guard !isBusy, !model.isDemo else { return }
     isBusy = true
     defer { isBusy = false }
+    let signingInAddress = serverAddress
     do {
       let client = try client()
       let loggedIn: AccountSession
@@ -62,22 +106,39 @@ final class AccountController: ObservableObject {
         let credential = try await apple.obtainCredential(nonce: challenge.nonce)
         loggedIn = try await client.signInApple(identityToken: credential.identityToken, challengeID: challenge.id)
       }
-      try await activate(loggedIn, model: model)
-      UserDefaults.standard.set(serverAddress, forKey: "MyEnergy.server")
+      try await activate(loggedIn, model: model, address: signingInAddress)
+      preferences.set(signingInAddress, forKey: "MyEnergy.server")
     } catch { message = error.localizedDescription }
   }
-  private func activate(_ value: AccountSession, model: AppModel) async throws {
-    let target = try accountURL(value.accountID)
-    let existingKey = try KeychainStore.read(key: keyName(value.accountID))
-    try KeychainStore.write(try JSONEncoder().encode(value), key: sessionKey)
-    try await model.switchStorage(to: target)
+  private func activate(_ value: AccountSession, model: AppModel, address: String) async throws {
+    // 读取目标文件会挂起；同一轮激活始终使用开始时的服务地址和安全存储命名空间。
+    let scope = Self.scope(for: address)
+    let savedSessionKey = "session.\(scope)"
+    let target = try accountURL(value.accountID, scope: scope)
+    let existingKey = try secrets.read(key: "vault.\(scope).\(value.accountID)")
+    let nextService: SyncService?
+    if let existingKey, existingKey.count == 32 {
+      guard let url = URL(string: address) else { throw VaultError.invalidServer }
+      nextService = try SyncService(baseURL: url, session: value, key: existingKey,
+        baselineURL: target.deletingLastPathComponent().appendingPathComponent("sync-base.json"))
+    } else { nextService = nil }
+    let previousSession = try secrets.read(key: savedSessionKey)
+    try secrets.write(try JSONEncoder().encode(value), key: savedSessionKey)
+    await activationPrepared?()
+    do { try await model.switchStorage(to: target) }
+    catch {
+      if let previousSession { try secrets.write(previousSession, key: savedSessionKey) }
+      else { try secrets.delete(key: savedSessionKey) }
+      throw error
+    }
+    serverAddress = address
     session = value
     conflictCount = 0
     revealedRecoveryKey = nil
     if let existingKey, existingKey.count == 32 {
       key = existingKey
       fingerprint = VaultCrypto.fingerprint(existingKey)
-      service = try makeService(session: value, key: existingKey)
+      service = nextService
       message = value.isDevelopment ? "本机开发账号已连接；尚未同步。此身份不是 Apple 登录。" : "已登录，账号空间已打开；尚未同步。"
     } else {
       key = nil; service = nil; fingerprint = ""
@@ -118,7 +179,7 @@ final class AccountController: ObservableObject {
       let baseline = try accountURL(session.accountID).deletingLastPathComponent().appendingPathComponent("sync-base.json")
       if FileManager.default.fileExists(atPath: baseline.path) { try FileManager.default.removeItem(at: baseline) }
     }
-    try KeychainStore.write(value, key: keyName(session.accountID))
+    try secrets.write(value, key: keyName(session.accountID))
     key = value
     fingerprint = VaultCrypto.fingerprint(value)
     service = try makeService(session: session, key: value)
@@ -157,7 +218,7 @@ final class AccountController: ObservableObject {
     guard session != nil, !isBusy, !model.isDemo else { return }
     isBusy = true; defer { isBusy = false }
     do {
-      let local = try await SnapshotFileStore(url: AppModel.defaultStorageURL).load()
+      let local = try await SnapshotFileStore(url: anonymousRecordsURL).load()
       let result = SnapshotMerger.merge(base: AppSnapshot(), local: model.snapshot, remote: local)
       guard result.conflicts.isEmpty else { throw VaultError.revisionConflict }
       try await model.replaceSnapshot(result.snapshot)
@@ -168,10 +229,15 @@ final class AccountController: ObservableObject {
     guard let session, !isBusy else { return }
     isBusy = true; defer { isBusy = false }
     do {
-      _ = try await SnapshotFileStore(url: AppModel.defaultStorageURL).load()
-      try KeychainStore.delete(key: sessionKey)
+      _ = try await SnapshotFileStore(url: anonymousRecordsURL).load()
+      let previousSession = try secrets.read(key: sessionKey)
+      try secrets.delete(key: sessionKey)
+      do { try await model.switchStorage(to: anonymousRecordsURL) }
+      catch {
+        if let previousSession { try secrets.write(previousSession, key: sessionKey) }
+        throw error
+      }
       self.session = nil; key = nil; service = nil; fingerprint = ""; revealedRecoveryKey = nil; conflictCount = 0
-      try await model.switchStorage(to: AppModel.defaultStorageURL)
       do { try await client().signOut(session: session); message = "已退出，当前显示此设备的离线记录。账号记录保留在独立空间。" }
       catch { message = "已退出此设备。服务暂不可达，会话尚未撤销，将按有效期过期。" }
     } catch { message = error.localizedDescription }
@@ -184,9 +250,9 @@ final class AccountController: ObservableObject {
       try await client().deleteAccount(session: session)
       self.session = nil; key = nil; service = nil; fingerprint = ""; revealedRecoveryKey = nil; conflictCount = 0
       var cleanupError: (any Error)?
-      do { try KeychainStore.delete(key: sessionKey); try KeychainStore.delete(key: keyName(session.accountID)) }
+      do { try secrets.delete(key: sessionKey); try secrets.delete(key: keyName(session.accountID)) }
       catch { cleanupError = error }
-      do { try await model.switchStorage(to: AppModel.defaultStorageURL) } catch { cleanupError = error }
+      do { try await model.switchStorage(to: anonymousRecordsURL) } catch { cleanupError = error }
       let directory = target.deletingLastPathComponent()
       if FileManager.default.fileExists(atPath: directory.path) {
         do { try FileManager.default.removeItem(at: directory) } catch { cleanupError = error }
@@ -204,9 +270,10 @@ struct AccountSettingsView: View {
   @State private var confirmKey = false
 
   var body: some View {
-    Section {
+    VStack(alignment: .leading, spacing: 14) {
       Text("设备与同步").font(.headline)
       Text(controller.message).font(.subheadline).foregroundStyle(.secondary).textSelection(.enabled)
+      Text(KeychainStore.backendDescription).font(.caption).foregroundStyle(.secondary)
       TextField("同步服务 HTTPS 地址", text: $controller.serverAddress)
         .textFieldStyle(.roundedBorder).disabled(controller.session != nil || controller.isBusy)
         .accessibilityLabel("同步服务地址")

@@ -15,9 +15,15 @@ public enum KeychainStoreError: Error, LocalizedError, Sendable {
   }
 }
 
-/// 令牌和密钥仅保存在当前设备，不进入可同步 Keychain，也不输出敏感值。
+/// 使用系统加密钥匙串，不输出敏感值。Mac 本地 Debug 使用独立的登录钥匙串空间。
 public enum KeychainStore {
+  #if os(macOS) && DEBUG
+  private static let service = "app.myenergy.local-development.v1"
+  public static let backendDescription = "本地开发使用此 Mac 的系统登录钥匙串，与正式签名版本分开，不启用 iCloud 密钥同步。"
+  #else
   private static let service = "app.myenergy.secure-store.v1"
+  public static let backendDescription = "使用当前设备的系统数据保护钥匙串，不启用 iCloud 密钥同步。"
+  #endif
 
   public static func read(key: String) throws -> Data? {
     var query = try baseQuery(key: key)
@@ -63,7 +69,13 @@ public enum KeychainStore {
       kSecAttrSynchronizable as String: false
     ]
     #if os(macOS)
+    #if DEBUG
+    // 未签名 Debug 没有数据保护钥匙串所需的 access-group entitlement。
+    // 仅在这个构建路径使用 macOS 登录钥匙串；其他平台及 Release 继续使用数据保护实现。
+    query[kSecUseDataProtectionKeychain as String] = false
+    #else
     query[kSecUseDataProtectionKeychain as String] = true
+    #endif
     #endif
     return query
   }

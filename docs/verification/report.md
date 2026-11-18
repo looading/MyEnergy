@@ -6,7 +6,7 @@
 
 | 检查 | 命令与条件 | 结果 |
 | --- | --- | --- |
-| Swift | `MYENERGY_TEST_SYNC_URL=http://127.0.0.1:18787 swift test --package-path Packages/MyEnergyKit`，独立本机测试服务 | 60 项通过：20 XCTest、40 Swift Testing；0 失败，三个服务集成用例实际执行 |
+| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 68 项通过：20 XCTest、48 Swift Testing；0 失败，双客户端及账号生命周期全部实际执行 |
 | 服务 | `node --test server/test/*.test.mjs` | 8 项通过，0 失败 |
 | Mac | `./scripts/build.sh MyEnergyMac` | 构建通过，实际启动 |
 | iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | 通用模拟器目标通过，包含 Watch companion |
@@ -47,3 +47,15 @@ Watch 回归覆盖异步 namespace 串行／合并、旧账号队列隔离、ACK
 ## 健康摘要补充
 
 新增 5 项 Core 和 6 项 UI 状态测试，并增加 1 项实际双客户端摘要传输回归。验证读取健康不等于开启分享；匿名／示例禁止分享；开启后使用稳定代际 ID，停用使用删除标记；账号切换停止分享和在途读取；不支持 HealthKit 的设备可显示接收摘要但不查询健康。健康摘要专项只读 review 未发现确定的 P1／P2 问题。所有样本均为明确测试夹具，不是真实测量。
+
+## 本地版本与开发账号收尾
+
+用户明确选择本轮只完成本地版本与开发账号联调。`./scripts/test-local.sh` 已实际执行：20 项 XCTest、48 项 Swift Testing，共 68 项 Swift 测试，加 8 项服务端测试，全部通过、无跳过。服务使用临时数据库与随机端口，结束后自动清理，不修改 8787 演示服务。
+
+新增 8 项账号 controller 真实本机服务回归：登录／建密钥／同步／恢复／退出，两个账号及匿名空间隔离，竞争建密钥后的正确恢复，空账号删除，服务离线时数据保留，激活失败回滚，退出切换失败回滚，以及确定性暂停下的恢复 endpoint 锁定。安全存储在这些用例中为隔离的内存注入；OS Keychain 单独以 `./scripts/check-local-keychain.sh` 验证跨进程写／读／删。
+
+实际 Mac 界面已登录 local-acceptance 开发账号、创建系统钥匙串中的恢复密钥、保存“本地开发账号联调验收样例。”记录。本机服务实际存在版本 1 的密文 vault；原匿名空间的记录没有自动导入。没有显示、复制或记录原恢复密钥，也没有进行真实 Apple 登录。
+
+定位并修复原未签名 Mac Debug 对数据保护钥匙串写入的 -34018（errSecMissingEntitlement）。对照仅改变钥匙串实现，原路径失败而系统登录钥匙串成功；修复限定 macOS Debug，使用独立 service 名称。正式版、iOS／watchOS 不作同类降级。另修复恢复过程可改 endpoint 的竞态，并用受控挂起加独立远端客户端回归，review 已确认修复。
+
+一项早期恢复测试错误地让两个 controller 共用同一设备的基线文件；已改用独立设备目录和基线重现远端更新，最终完整回归通过。未用删除断言或放宽结果来绕过失败。
