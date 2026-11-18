@@ -1,0 +1,14 @@
+.DS_Store
+.build/
+.swiftpm/
+DerivedData/
+build/
+.env
+*.sqlite*
+*.db
+*.xcuserstate
+xcuserdata/
+server/data/
+.local/
+*.log
+
