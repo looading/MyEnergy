@@ -3,13 +3,6 @@ import MyEnergyCore
 
 public struct MyEnergyRootView: View {
     @ObservedObject private var model: AppModel
-    #if !os(watchOS)
-    @State private var section: AppSection = .today
-    @State private var showsEntry = false
-    #endif
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    #endif
 
     public init(model: AppModel) { self.model = model }
 
@@ -17,15 +10,32 @@ public struct MyEnergyRootView: View {
         #if os(watchOS)
         MyEnergyWatchView(model: model)
         #else
-        navigation
-            .tint(EnergyStyle.forest)
-            .background(EnergyStyle.canvas)
-            .safeAreaInset(edge: .top, spacing: 0) { statusBanner }
-            .sheet(isPresented: $showsEntry) { EntryEditor(model: model) }
+        EnergyStateThemeHost(model: model) {
+            MyEnergyRootContent(model: model)
+        }
         #endif
     }
+}
 
-    #if !os(watchOS)
+#if !os(watchOS)
+private struct MyEnergyRootContent: View {
+    @Environment(\.energyTheme) private var theme
+    @ObservedObject private var model: AppModel
+    @State private var section: AppSection = .today
+    @State private var showsEntry = false
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
+
+    init(model: AppModel) { self.model = model }
+
+    var body: some View {
+        navigation
+            .tint(theme.accent)
+            .background(theme.canvas)
+            .sheet(isPresented: $showsEntry) { EntryEditor(model: model) }
+    }
+
     @ViewBuilder private var navigation: some View {
         #if os(iOS)
         if sizeClass == .compact {
@@ -35,6 +45,7 @@ public struct MyEnergyRootView: View {
                         .tabItem { Label(item.title, systemImage: item.symbol) }.tag(item)
                 }
             }
+            .safeAreaInset(edge: .top, spacing: 0) { statusBanner }
         } else { sidebar }
         #else
         sidebar
@@ -46,19 +57,23 @@ public struct MyEnergyRootView: View {
             List(AppSection.allCases, selection: Binding<AppSection?>(get: { section }, set: { if let value = $0 { section = value } })) { item in
                 Label(item.title, systemImage: item.symbol).tag(item)
                     .padding(.vertical, 7)
+                    .listRowBackground(theme.surface)
             }
+            .scrollContentBackground(.hidden)
+            .background(theme.canvas)
             .navigationTitle("MyEnergy")
             .safeAreaInset(edge: .bottom) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Image(systemName: "leaf").font(.title2).foregroundStyle(EnergyStyle.forest)
+                    Image(systemName: "leaf").font(.title2).foregroundStyle(theme.accent)
                     Text("留一点时间，\n听听自己的感受。")
-                        .font(.callout).foregroundStyle(EnergyStyle.secondary)
-                    Text(model.localStatus).font(.caption2).foregroundStyle(EnergyStyle.secondary)
+                        .font(.callout).foregroundStyle(theme.secondary)
+                    Text(model.localStatus).font(.caption2).foregroundStyle(theme.secondary)
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(22)
             }
             .navigationSplitViewColumnWidth(min: 195, ideal: 220, max: 270)
         } detail: {
             NavigationStack { page(section) }
+                .safeAreaInset(edge: .top, spacing: 0) { statusBanner }
         }
     }
 
@@ -97,23 +112,21 @@ public struct MyEnergyRootView: View {
                 Spacer(minLength: 0)
                 Button("退出示例") { model.exitDemo() }.buttonStyle(.bordered)
             }.padding(.horizontal, 20).padding(.vertical, 10)
-                .background(EnergyStyle.sage).foregroundStyle(EnergyStyle.ink)
+                .background(theme.accentSoft).foregroundStyle(theme.ink)
                 .accessibilityElement(children: .contain)
         } else if model.hasLoadFailure {
             HStack(alignment: .top, spacing: 12) {
                 InlineError(message: model.errorMessage ?? "本机记录读取失败，原文件已保留。")
                 Spacer(minLength: 0)
                 Button("重试") { Task { await model.load() } }.disabled(model.isSaving)
-            }.padding(16).background(EnergyStyle.surface)
+            }.padding(16).background(theme.surface)
         } else if !model.isLoaded {
             HStack { ProgressView(); Text("正在读取本机记录…").font(.callout) }
-                .frame(maxWidth: .infinity).padding(12).background(EnergyStyle.surface)
+                .frame(maxWidth: .infinity).padding(12).background(theme.surface)
         }
     }
-    #endif
 }
 
-#if !os(watchOS)
 private enum AppSection: String, CaseIterable, Identifiable {
     case today, sleep, trends, habits, settings
     var id: Self { self }

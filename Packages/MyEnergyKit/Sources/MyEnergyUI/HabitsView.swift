@@ -3,6 +3,7 @@ import SwiftUI
 import MyEnergyCore
 
 struct HabitsView: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     @State private var showsNewHabit = false
     @State private var editingHabit: HabitDefinition?
@@ -18,7 +19,7 @@ struct HabitsView: View {
                     VStack(alignment: .leading, spacing: 18) {
                         HStack {
                             Text("今天 · \(model.activeHabits.filter { model.isComplete($0) }.count)/\(model.activeHabits.count) 已完成")
-                                .font(.headline).foregroundStyle(EnergyStyle.ink)
+                                .font(.headline).foregroundStyle(theme.ink)
                             Spacer()
                             Button { showsNewHabit = true } label: { Label("添加", systemImage: "plus") }.disabled(!model.canEdit)
                         }
@@ -41,7 +42,7 @@ struct HabitsView: View {
                                         }.accessibilityLabel("管理\(habit.title)").disabled(!model.canEdit)
                                     }
                                     Text("近 7 天完成 \(recentCompletionCount(habit)) 天")
-                                        .font(.caption).foregroundStyle(EnergyStyle.secondary).padding(.leading, 50)
+                                        .font(.caption).foregroundStyle(theme.secondary).padding(.leading, 50)
                                 }
                                 if habit.id != model.activeHabits.last?.id { Divider() }
                             }
@@ -49,28 +50,28 @@ struct HabitsView: View {
                     }
                 }
                 Text("点击圆圈标记完成，再点一次即可撤销。记录日期在打卡时固定，旅行后也会保留。")
-                    .font(.footnote).foregroundStyle(EnergyStyle.secondary)
+                    .font(.footnote).foregroundStyle(theme.secondary)
                 if !archived.isEmpty {
                     EnergyCard {
                         DisclosureGroup("已停用的习惯（\(archived.count)）", isExpanded: $showsArchived) {
                             VStack(spacing: 16) {
                                 ForEach(archived) { habit in
                                     HStack {
-                                        Label(habit.title, systemImage: habit.symbol).foregroundStyle(EnergyStyle.secondary)
+                                        Label(habit.title, systemImage: habit.symbol).foregroundStyle(theme.secondary)
                                         Spacer()
                                         Button("重新启用") { Task { await model.setHabitArchived(habit, archived: false) } }
                                             .disabled(!model.canEdit)
                                     }
                                 }
                                 Text("过去的完成记录会保留。停用期间无需打卡。")
-                                    .font(.caption).foregroundStyle(EnergyStyle.secondary)
+                                    .font(.caption).foregroundStyle(theme.secondary)
                             }.padding(.top, 16)
                         }
                     }
                 }
                 if let error = model.errorMessage { InlineError(message: error) }
             }.padding(24).frame(maxWidth: 850).frame(maxWidth: .infinity)
-        }.background(EnergyStyle.canvas)
+        }.background(theme.canvas)
             .sheet(isPresented: $showsNewHabit) { HabitEditor(model: model) }
             .sheet(item: $editingHabit) { HabitEditor(model: model, habit: $0) }
     }
@@ -88,6 +89,7 @@ struct HabitsView: View {
 }
 
 struct HabitCompletionRow: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     let habit: HabitDefinition
 
@@ -98,11 +100,11 @@ struct HabitCompletionRow: View {
         } label: {
             HStack(spacing: 13) {
                 Image(systemName: model.isComplete(habit) ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 29, weight: .light)).foregroundStyle(EnergyStyle.forest)
-                Image(systemName: habit.symbol).font(.body).foregroundStyle(EnergyStyle.secondary).frame(width: 23)
-                Text(habit.title).font(.body).foregroundStyle(EnergyStyle.ink).multilineTextAlignment(.leading)
+                    .font(.system(size: 29, weight: .light)).foregroundStyle(theme.accent)
+                Image(systemName: habit.symbol).font(.body).foregroundStyle(theme.secondary).frame(width: 23)
+                Text(habit.title).font(.body).foregroundStyle(theme.ink).multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
-                if model.isComplete(habit) { Text("完成").font(.caption).foregroundStyle(EnergyStyle.secondary) }
+                if model.isComplete(habit) { Text("完成").font(.caption).foregroundStyle(theme.secondary) }
             }.frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).contentShape(Rectangle())
         }.buttonStyle(.plain).disabled(!model.canEdit)
             .accessibilityLabel("\(habit.title)，\(model.isComplete(habit) ? "今天已完成" : "今天未完成")")
@@ -111,6 +113,7 @@ struct HabitCompletionRow: View {
 }
 
 struct HabitEditor: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     private let habit: HabitDefinition?
     @Environment(\.dismiss) private var dismiss
@@ -133,25 +136,25 @@ struct HabitEditor: View {
             Form {
                 Section {
                     TextField("例如：给自己留十分钟", text: $title).accessibilityLabel("习惯名称")
-                    Text("\(trimmed.count)/40 字").font(.caption).foregroundStyle(trimmed.count > 40 ? .red : EnergyStyle.secondary)
+                    Text("\(trimmed.count)/40 字").font(.caption).foregroundStyle(trimmed.count > 40 ? .red : theme.secondary)
                 } header: { Text("一件想为自己做的小事") }
                 Section("选一个图标") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 54))], spacing: 12) {
                         ForEach(symbols, id: \.self) { item in
                             Button { symbol = item } label: {
                                 Image(systemName: item).font(.title2).frame(maxWidth: .infinity, minHeight: 54)
-                                    .foregroundStyle(EnergyStyle.forest)
-                                    .background(symbol == item ? EnergyStyle.sage : .clear, in: RoundedRectangle(cornerRadius: 13))
-                                    .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(symbol == item ? EnergyStyle.forest : EnergyStyle.line))
+                                    .foregroundStyle(theme.accent)
+                                    .background(symbol == item ? theme.accentSoft : .clear, in: RoundedRectangle(cornerRadius: 13))
+                                    .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(symbol == item ? theme.accent : theme.border))
                             }.buttonStyle(.plain).accessibilityLabel(iconLabel(item))
                                 .accessibilityAddTraits(symbol == item ? .isSelected : [])
                         }
                     }.padding(.vertical, 8)
                 }
                 Section { Text("每天手动完成，也可以随时撤销。停用习惯后，历史记录仍会保留。")
-                    .font(.callout).foregroundStyle(EnergyStyle.secondary) }
+                    .font(.callout).foregroundStyle(theme.secondary) }
                 if let saveError { Section { InlineError(message: saveError) } }
-            }.formStyle(.grouped).scrollContentBackground(.hidden).background(EnergyStyle.canvas)
+            }.formStyle(.grouped).scrollContentBackground(.hidden).background(theme.canvas)
                 .navigationTitle(habit == nil ? "添加小习惯" : "编辑小习惯")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.keyboardShortcut(.cancelAction) }
@@ -164,7 +167,7 @@ struct HabitEditor: View {
                         }.disabled(!model.canEdit || trimmed.isEmpty || trimmed.count > 40).keyboardShortcut(.defaultAction)
                     }
                 }
-        }.tint(EnergyStyle.forest)
+        }.tint(theme.accent)
         #if os(macOS)
         .frame(minWidth: 440, idealWidth: 480, minHeight: 430, idealHeight: 520)
         #endif

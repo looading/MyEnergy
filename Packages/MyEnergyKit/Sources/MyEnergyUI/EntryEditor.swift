@@ -3,6 +3,7 @@ import SwiftUI
 import MyEnergyCore
 
 struct EntryEditor: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     private let entry: EnergyEntry?
     @Environment(\.dismiss) private var dismiss
@@ -28,7 +29,7 @@ struct EntryEditor: View {
                 Section {
                     VStack(spacing: 18) {
                         EnergyRing(value: Int(energy), size: 140).padding(.top, 12)
-                        Text("按你自己的感受来选择").foregroundStyle(EnergyStyle.secondary)
+                        Text("按你自己的感受来选择").foregroundStyle(theme.secondary)
                         Slider(value: $energy, in: 0...100, step: 1) {
                             Text("主观精力")
                         } minimumValueLabel: { Text("0").font(.caption) }
@@ -48,10 +49,10 @@ struct EntryEditor: View {
                                     Text(choice.title).font(.caption).multilineTextAlignment(.center)
                                         .fixedSize(horizontal: false, vertical: true)
                                     Image(systemName: mood == choice ? "checkmark.circle.fill" : "circle")
-                                        .font(.caption).foregroundStyle(mood == choice ? EnergyStyle.forest : EnergyStyle.secondary)
+                                        .font(.caption).foregroundStyle(mood == choice ? theme.accent : theme.secondary)
                                 }.frame(maxWidth: .infinity, minHeight: 108).padding(7)
-                                    .background(mood == choice ? EnergyStyle.sage.opacity(0.7) : EnergyStyle.canvas, in: RoundedRectangle(cornerRadius: 16))
-                                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(mood == choice ? EnergyStyle.forest : .clear, lineWidth: 1.5))
+                                    .background(mood == choice ? theme.accentSoft.opacity(0.7) : theme.canvas, in: RoundedRectangle(cornerRadius: 16))
+                                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(mood == choice ? theme.accent : .clear, lineWidth: 1.5))
                             }.buttonStyle(.plain).accessibilityLabel(choice.title)
                                 .accessibilityAddTraits(mood == choice ? .isSelected : [])
                         }
@@ -63,20 +64,20 @@ struct EntryEditor: View {
                 Section {
                     TextEditor(text: $note).frame(minHeight: 100).accessibilityLabel("简短备注，最多 500 字")
                     HStack {
-                        Text("只给自己看的几句话").foregroundStyle(EnergyStyle.secondary)
+                        Text("只给自己看的几句话").foregroundStyle(theme.secondary)
                         Spacer()
-                        Text("\(note.count)/500").monospacedDigit().foregroundStyle(note.count > 500 ? .red : EnergyStyle.secondary)
+                        Text("\(note.count)/500").monospacedDigit().foregroundStyle(note.count > 500 ? .red : theme.secondary)
                     }.font(.caption)
                 } header: { Text("备注 · 可选") }
                 Section {
                     DatePicker("发生时间", selection: $occurredAt, in: ...Date(), displayedComponents: [.date, .hourAndMinute])
                     if let entry {
-                        Text("保留原记录时区：\(entry.timeZoneIdentifier)").font(.caption).foregroundStyle(EnergyStyle.secondary)
+                        Text("保留原记录时区：\(entry.timeZoneIdentifier)").font(.caption).foregroundStyle(theme.secondary)
                     }
                 }
                 if let saveError { Section { InlineError(message: saveError) } }
             }
-            .formStyle(.grouped).scrollContentBackground(.hidden).background(EnergyStyle.canvas)
+            .formStyle(.grouped).scrollContentBackground(.hidden).background(theme.canvas)
             .navigationTitle(entry == nil ? "记下此刻" : "编辑记录")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.keyboardShortcut(.cancelAction) }
@@ -86,11 +87,12 @@ struct EntryEditor: View {
                 }
             }
         }
-        .tint(EnergyStyle.forest)
+        .tint(theme.accent)
         #if os(macOS)
         .frame(minWidth: 480, idealWidth: 540, minHeight: 620, idealHeight: 780)
         #endif
         .interactiveDismissDisabled(model.isSaving)
+        .stateThemeDraft(energy: energy, mood: mood)
     }
 
     private func save() async {
@@ -100,6 +102,7 @@ struct EntryEditor: View {
 }
 
 struct EntryDetailView: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     let entryID: UUID
     @Environment(\.dismiss) private var dismiss
@@ -116,22 +119,22 @@ struct EntryDetailView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         EnergyCard {
                             VStack(spacing: 18) {
-                                Text("主观自评").font(.subheadline).foregroundStyle(EnergyStyle.secondary)
+                                Text("主观自评").font(.subheadline).foregroundStyle(theme.secondary)
                                 EnergyRing(value: entry.energy, size: 170)
                                 if let mood = entry.mood {
                                     HStack { MoodGlyph(mood: mood); Text(mood.title) }
-                                } else { Text("未填写心情").foregroundStyle(EnergyStyle.secondary) }
+                                } else { Text("未填写心情").foregroundStyle(theme.secondary) }
                                 Text(entry.occurredAt.formatted(date: .complete, time: .shortened))
-                                    .font(.callout).multilineTextAlignment(.center).foregroundStyle(EnergyStyle.secondary)
+                                    .font(.callout).multilineTextAlignment(.center).foregroundStyle(theme.secondary)
                             }.frame(maxWidth: .infinity).padding(.vertical, 12)
                         }
                         EnergyCard {
                             VStack(alignment: .leading, spacing: 12) {
                                 SectionHeading(title: "给自己的备注")
                                 Text(entry.note.isEmpty ? "这次没有填写备注。" : entry.note)
-                                    .foregroundStyle(entry.note.isEmpty ? EnergyStyle.secondary : EnergyStyle.ink)
+                                    .foregroundStyle(entry.note.isEmpty ? theme.secondary : theme.ink)
                                     .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-                                Text("记录时区：\(entry.timeZoneIdentifier)").font(.caption).foregroundStyle(EnergyStyle.secondary)
+                                Text("记录时区：\(entry.timeZoneIdentifier)").font(.caption).foregroundStyle(theme.secondary)
                             }
                         }
                         if let deleteError { InlineError(message: deleteError) }
@@ -143,7 +146,7 @@ struct EntryDetailView: View {
                     EmptyState(symbol: "tray", title: "这条记录已不存在", message: "它可能已被删除，返回后查看其他记录。")
                         .padding(24)
                 }
-            }.background(EnergyStyle.canvas).navigationTitle("记录详情")
+            }.background(theme.canvas).navigationTitle("记录详情")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("完成") { dismiss() } }
                     ToolbarItem(placement: .primaryAction) { Button("编辑") { showsEdit = true }.disabled(entry == nil || !model.canEdit) }
@@ -158,7 +161,7 @@ struct EntryDetailView: View {
                     }
                     Button("取消", role: .cancel) { }
                 } message: { Text("此操作会删除精力、心情和备注；开启同步后会传播到其他设备。") }
-        }.tint(EnergyStyle.forest)
+        }.tint(theme.accent)
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 520, minHeight: 580, idealHeight: 720)
         #endif

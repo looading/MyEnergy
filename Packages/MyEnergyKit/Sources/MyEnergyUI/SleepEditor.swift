@@ -33,6 +33,7 @@ struct SleepDraft: Equatable {
 }
 
 struct SleepEditor: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     @Binding var draft: SleepDraft
     var onSaved: () -> Void = { }
@@ -61,9 +62,9 @@ struct SleepEditor: View {
                 }
                 Section {
                     Label("手动补记 · 自述时段估算", systemImage: "pencil.and.outline")
-                        .font(.headline).foregroundStyle(EnergyStyle.ink)
+                        .font(.headline).foregroundStyle(theme.ink)
                     Text("填写你记得的开始和结束时间。时长按整个时段估算，可能包含清醒时间；不会写入 Apple 健康。")
-                        .font(.callout).foregroundStyle(EnergyStyle.secondary)
+                        .font(.callout).foregroundStyle(theme.secondary)
                 }
                 Section {
                     DatePicker("开始时间", selection: $draft.bedtime, in: ...Date(), displayedComponents: [.date, .hourAndMinute])
@@ -74,7 +75,7 @@ struct SleepEditor: View {
                         LabeledContent("时段估算", value: "\((draft.wakeTime.timeIntervalSince(draft.bedtime) / 3600).formatted(.number.precision(.fractionLength(1)))) 小时")
                     }
                     Text("记录时区：\(draft.timeZoneIdentifier)")
-                        .font(.caption).foregroundStyle(EnergyStyle.secondary)
+                        .font(.caption).foregroundStyle(theme.secondary)
                 } header: { Text("睡眠时段") }
                 footer: { Text("支持跨午夜，最长 24 小时。保留填写时的时区；趋势按查看设备时区的结束日期汇总。") }
                 Section {
@@ -84,17 +85,17 @@ struct SleepEditor: View {
                         Text("例如夜里醒过、午睡或记不清时间")
                         Spacer()
                         Text("\(draft.note.count)/500").monospacedDigit()
-                            .foregroundStyle(draft.note.count > 500 ? .red : EnergyStyle.secondary)
-                    }.font(.caption).foregroundStyle(EnergyStyle.secondary)
+                            .foregroundStyle(draft.note.count > 500 ? .red : theme.secondary)
+                    }.font(.caption).foregroundStyle(theme.secondary)
                 } header: { Text("备注 · 可选") }
                 if let validationMessage { Section { InlineError(message: validationMessage) } }
                 if let saveError { Section { InlineError(message: saveError) } }
                 Section {
                     Text("取消后，输入会暂留在当前页面，便于继续填写。只有点“保存”才会写入记录；离开本栏目或关闭应用可能丢失未保存的草稿。")
-                        .font(.footnote).foregroundStyle(EnergyStyle.secondary)
+                        .font(.footnote).foregroundStyle(theme.secondary)
                 }
             }
-            .formStyle(.grouped).scrollContentBackground(.hidden).background(EnergyStyle.canvas)
+            .formStyle(.grouped).scrollContentBackground(.hidden).background(theme.canvas)
             .navigationTitle(draft.recordID == nil ? "补记睡眠" : "编辑睡眠记录")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -105,7 +106,7 @@ struct SleepEditor: View {
                         .disabled(!model.canEdit || validationMessage != nil).keyboardShortcut(.defaultAction)
                 }
             }
-        }.tint(EnergyStyle.forest)
+        }.tint(theme.accent)
         #if os(macOS)
         .frame(minWidth: 480, idealWidth: 560, minHeight: 560, idealHeight: 700)
         #endif
@@ -122,6 +123,7 @@ struct SleepEditor: View {
 }
 
 struct SleepRecordDetailView: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     private let recordID: UUID
     @State private var draft: SleepDraft
@@ -148,27 +150,27 @@ struct SleepRecordDetailView: View {
                             VStack(alignment: .leading, spacing: 18) {
                                 StatusPill(text: "手动补记 · 时段估算", symbol: "pencil.and.outline")
                                 Text("\(record.durationHours.formatted(.number.precision(.fractionLength(1)))) 小时")
-                                    .font(.system(.largeTitle, design: .rounded).weight(.medium)).foregroundStyle(EnergyStyle.ink)
+                                    .font(.system(.largeTitle, design: .rounded).weight(.medium)).foregroundStyle(theme.ink)
                                 LabeledContent("开始时间", value: sleepDateText(record.bedtime, timeZoneIdentifier: record.timeZoneIdentifier))
                                 LabeledContent("结束时间", value: sleepDateText(record.wakeTime, timeZoneIdentifier: record.timeZoneIdentifier))
                                 Text("时长按你填写的整个时段估算，可能包含清醒时间。")
-                                    .font(.footnote).foregroundStyle(EnergyStyle.secondary)
+                                    .font(.footnote).foregroundStyle(theme.secondary)
                             }
                         }
                         EnergyCard {
                             VStack(alignment: .leading, spacing: 12) {
                                 SectionHeading(title: "给自己的备注")
                                 Text(record.note.isEmpty ? "这次没有填写备注。" : record.note)
-                                    .foregroundStyle(record.note.isEmpty ? EnergyStyle.secondary : EnergyStyle.ink)
+                                    .foregroundStyle(record.note.isEmpty ? theme.secondary : theme.ink)
                                     .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-                                Text("记录时区：\(record.timeZoneIdentifier)").font(.caption).foregroundStyle(EnergyStyle.secondary)
+                                Text("记录时区：\(record.timeZoneIdentifier)").font(.caption).foregroundStyle(theme.secondary)
                                 Text("修改于 \(record.modifiedAt.formatted(date: .abbreviated, time: .shortened))")
-                                    .font(.caption).foregroundStyle(EnergyStyle.secondary)
+                                    .font(.caption).foregroundStyle(theme.secondary)
                             }
                         }
                         if hasUnfinishedDraft {
                             Text("上次取消的编辑输入仍暂留在此页，可以继续编辑。")
-                                .font(.footnote).foregroundStyle(EnergyStyle.secondary)
+                                .font(.footnote).foregroundStyle(theme.secondary)
                         }
                         Button(role: .destructive) { showsDelete = true } label: {
                             Label("删除这条睡眠记录", systemImage: "trash").frame(maxWidth: .infinity, minHeight: 44)
@@ -178,7 +180,7 @@ struct SleepRecordDetailView: View {
                     }
                     if let deleteError { InlineError(message: deleteError) }
                 }.padding(24)
-            }.background(EnergyStyle.canvas).navigationTitle("手动睡眠记录")
+            }.background(theme.canvas).navigationTitle("手动睡眠记录")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("完成") { dismiss() } }
                     ToolbarItem(placement: .primaryAction) {
@@ -201,7 +203,7 @@ struct SleepRecordDetailView: View {
                     }
                     Button("取消", role: .cancel) { }
                 } message: { Text("将删除这段手动填写的时间和备注。开启同步后，删除会传播到同账号设备。") }
-        }.tint(EnergyStyle.forest)
+        }.tint(theme.accent)
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 540, minHeight: 560, idealHeight: 700)
         #endif

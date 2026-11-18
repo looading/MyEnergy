@@ -4,6 +4,7 @@ import Charts
 import MyEnergyCore
 
 struct TrendsView: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     @State private var dayCount = 7
     @State private var selectedEntry: EnergyEntry?
@@ -38,7 +39,7 @@ struct TrendsView: View {
                         HStack(alignment: .top) {
                             SectionHeading(title: "主观精力", subtitle: "折线为每日均值 · 范围 0～100")
                             Spacer()
-                            Image(systemName: "waveform.path").font(.title2).foregroundStyle(EnergyStyle.forest)
+                            Image(systemName: "waveform.path").font(.title2).foregroundStyle(theme.accent)
                         }
                         if points.isEmpty {
                             EmptyState(symbol: "chart.xyaxis.line", title: "从第一次记录开始", message: "记录后，这里会慢慢出现你的变化。没有记录的日子会保持空白。")
@@ -46,7 +47,7 @@ struct TrendsView: View {
                             energyChart
                         }
                         Text("留白表示没有记录，不代表精力为零。日期按每条记录保存的当地时区归档。")
-                            .font(.footnote).foregroundStyle(EnergyStyle.secondary)
+                            .font(.footnote).foregroundStyle(theme.secondary)
                     }
                 }
                 summary
@@ -60,16 +61,16 @@ struct TrendsView: View {
                     }
                 }
             }.padding(24).frame(maxWidth: 1040).frame(maxWidth: .infinity)
-        }.background(EnergyStyle.canvas)
+        }.background(theme.canvas)
             .sheet(item: $selectedEntry) { EntryDetailView(model: model, entryID: $0.id) }
     }
 
     private var energyChart: some View {
         Chart(points) { point in
             LineMark(x: .value("日期", point.date), y: .value("每日平均精力", point.average), series: .value("连续片段", point.segment))
-                .interpolationMethod(.linear).foregroundStyle(EnergyStyle.forest).lineStyle(StrokeStyle(lineWidth: 2.5))
+                .interpolationMethod(.linear).foregroundStyle(theme.accent).lineStyle(StrokeStyle(lineWidth: 2.5))
             PointMark(x: .value("日期", point.date), y: .value("每日平均精力", point.average))
-                .foregroundStyle(EnergyStyle.forest).symbolSize(42)
+                .foregroundStyle(theme.accent).symbolSize(42)
                 .accessibilityLabel(point.date.formatted(date: .abbreviated, time: .omitted))
                 .accessibilityValue("每日平均主观精力 \(Int(point.average.rounded()))")
         }
@@ -77,13 +78,13 @@ struct TrendsView: View {
         .chartXScale(domain: (days.first?.date ?? Date())...(days.last?.date ?? Date()))
         .chartYAxis {
             AxisMarks(values: [0, 25, 50, 75, 100]) { _ in
-                AxisGridLine().foregroundStyle(EnergyStyle.line)
-                AxisValueLabel().foregroundStyle(EnergyStyle.secondary)
+                AxisGridLine().foregroundStyle(theme.border)
+                AxisValueLabel().foregroundStyle(theme.secondary)
             }
         }
         .chartXAxis {
             AxisMarks(values: .stride(by: .day, count: dayCount == 7 ? 1 : 7)) { _ in
-                AxisValueLabel(format: .dateTime.month(.defaultDigits).day()).foregroundStyle(EnergyStyle.secondary)
+                AxisValueLabel(format: .dateTime.month(.defaultDigits).day()).foregroundStyle(theme.secondary)
             }
         }
         .chartLegend(.hidden).frame(height: 230)
@@ -105,10 +106,10 @@ struct TrendsView: View {
 
     private func summaryTile(value: String, title: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(value).font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(EnergyStyle.ink)
-            Text(title).font(.caption).foregroundStyle(EnergyStyle.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(value).font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(theme.ink)
+            Text(title).font(.caption).foregroundStyle(theme.secondary).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity, alignment: .leading).padding(16)
-            .background(EnergyStyle.sage.opacity(0.5), in: RoundedRectangle(cornerRadius: 18))
+            .background(theme.accentSoft.opacity(0.5), in: RoundedRectangle(cornerRadius: 18))
             .accessibilityElement(children: .combine)
     }
 
@@ -118,10 +119,10 @@ struct TrendsView: View {
                 Text(day.date.formatted(.dateTime.month().day().weekday(.abbreviated))).font(.callout)
                 Spacer()
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("未记录精力").font(.callout).foregroundStyle(EnergyStyle.secondary)
-                    if day.habitCount > 0 { Text("习惯完成 \(day.habitCount) 次").font(.caption).foregroundStyle(EnergyStyle.secondary) }
+                    Text("未记录精力").font(.callout).foregroundStyle(theme.secondary)
+                    if day.habitCount > 0 { Text("习惯完成 \(day.habitCount) 次").font(.caption).foregroundStyle(theme.secondary) }
                 }
-            }.padding(.vertical, 5).foregroundStyle(EnergyStyle.ink).accessibilityElement(children: .combine)
+            }.padding(.vertical, 5).foregroundStyle(theme.ink).accessibilityElement(children: .combine)
         } else {
             DisclosureGroup {
                 VStack(spacing: 12) {
@@ -133,11 +134,11 @@ struct TrendsView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(day.date.formatted(.dateTime.month().day().weekday(.abbreviated))).font(.callout.weight(.medium))
-                        Text("\(day.entries.count) 条记录 · 习惯完成 \(day.habitCount) 次").font(.caption).foregroundStyle(EnergyStyle.secondary)
+                        Text("\(day.entries.count) 条记录 · 习惯完成 \(day.habitCount) 次").font(.caption).foregroundStyle(theme.secondary)
                     }
                     Spacer()
-                    Text("均值 \(Int((day.average ?? 0).rounded()))").font(.callout.weight(.medium)).foregroundStyle(EnergyStyle.forest)
-                }.foregroundStyle(EnergyStyle.ink).padding(.vertical, 5)
+                    Text("均值 \(Int((day.average ?? 0).rounded()))").font(.callout.weight(.medium)).foregroundStyle(theme.accent)
+                }.foregroundStyle(theme.ink).padding(.vertical, 5)
             }
         }
     }

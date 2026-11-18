@@ -264,6 +264,7 @@ final class AccountController: ObservableObject {
 }
 
 struct AccountSettingsView: View {
+  @Environment(\.energyTheme) private var theme
   @ObservedObject var model: AppModel
   @ObservedObject private var controller = AccountController.shared
   @State private var confirmDelete = false
@@ -272,8 +273,8 @@ struct AccountSettingsView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       Text("设备与同步").font(.headline)
-      Text(controller.message).font(.subheadline).foregroundStyle(.secondary).textSelection(.enabled)
-      Text(KeychainStore.backendDescription).font(.caption).foregroundStyle(.secondary)
+      Text(controller.message).font(.subheadline).foregroundStyle(theme.secondary).textSelection(.enabled)
+      Text(KeychainStore.backendDescription).font(.caption).foregroundStyle(theme.secondary)
       TextField("同步服务 HTTPS 地址", text: $controller.serverAddress)
         .textFieldStyle(.roundedBorder).disabled(controller.session != nil || controller.isBusy)
         .accessibilityLabel("同步服务地址")
@@ -282,12 +283,12 @@ struct AccountSettingsView: View {
         if !controller.fingerprint.isEmpty {
           Text("密钥指纹：\(controller.fingerprint)").font(.caption).textSelection(.enabled)
           Button("同步此设备") { Task { await controller.synchronize(model: model) } }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.borderedProminent).foregroundStyle(theme.onAccent)
           Button("查看恢复密钥") { confirmKey = true }
           if let recovery = controller.revealedRecoveryKey {
             Text(recovery).font(.caption.monospaced()).textSelection(.enabled)
             Text("此密钥可解密账号记录。只向你自己的设备传递；遗失后服务无法恢复。")
-              .font(.caption).foregroundStyle(.secondary)
+              .font(.caption).foregroundStyle(theme.secondary)
             Button("隐藏密钥") { controller.revealedRecoveryKey = nil }
           }
         } else {
@@ -300,12 +301,12 @@ struct AccountSettingsView: View {
             SecureField("原设备恢复密钥", text: $controller.recoveryInput).textFieldStyle(.roundedBorder)
             Button("验证服务端记录并替换此设备密钥") { Task { await controller.importKey() } }
             Text("仅在候选密钥能解密服务端现有记录后替换，本机尚未同步的记录会保留。")
-              .font(.caption).foregroundStyle(.secondary)
+              .font(.caption).foregroundStyle(theme.secondary)
           }
         }
         if controller.conflictCount > 0 {
           Text("选择只处理同时修改的记录，其他设备新增内容会保留。")
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.caption).foregroundStyle(theme.secondary)
           Button("冲突记录保留此设备版本") { Task { await controller.synchronize(model: model, resolving: .local) } }
           Button("冲突记录采用服务端版本") { Task { await controller.synchronize(model: model, resolving: .remote) } }
         }
@@ -315,15 +316,15 @@ struct AccountSettingsView: View {
       } else {
         Button { Task { await controller.login(model: model, development: false) } } label: {
           Label("使用 Apple 登录", systemImage: "apple.logo")
-        }.buttonStyle(.borderedProminent)
+        }.buttonStyle(.borderedProminent).foregroundStyle(theme.onAccent)
         Text("账号空间与本机离线记录分开。健康原始样本留在 Apple 健康，摘要默认不共享；需在健康连接中单独开启。")
-          .font(.caption).foregroundStyle(.secondary)
+          .font(.caption).foregroundStyle(theme.secondary)
         #if DEBUG
         DisclosureGroup("本机开发联调") {
           TextField("开发账号名称", text: $controller.developmentName).textFieldStyle(.roundedBorder)
           Button("连接本机开发账号") { Task { await controller.login(model: model, development: true) } }
           Text("需运行 scripts/run-server.sh。仅用于验证同步，不代表真实 Apple 登录或真机互联。")
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.caption).foregroundStyle(theme.secondary)
         }
         #endif
       }

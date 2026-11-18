@@ -1,19 +1,20 @@
 # 首版验证报告
 
-日期：2026-11-18。范围为本地 MVP、通用目标编译和开发身份加密同步。真实四端账号互联和发布尚未验收。
+日期：2026-11-18。范围为本地 MVP、睡眠观测、二维状态主题、通用目标编译和开发身份加密同步。真实四端账号互联和发布尚未验收。
 
 ## 已通过检查
 
 | 检查 | 命令与条件 | 结果 |
 | --- | --- | --- |
-| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 89 项通过：35 XCTest、54 Swift Testing；0 失败，双客户端及账号生命周期全部实际执行 |
+| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 最新 106 项通过：35 XCTest、71 Swift Testing；0 失败，双客户端及账号生命周期全部实际执行 |
 | 服务 | `node --test server/test/*.test.mjs` | 8 项通过，0 失败 |
-| Mac | `./scripts/build.sh MyEnergyMac` | 构建通过，实际启动 |
-| iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | 通用模拟器目标通过，包含 Watch companion |
-| Watch | `./scripts/build.sh MyEnergyWatch` | 通用模拟器目标通过 |
+| MyEnergyUI | `swift build --package-path Packages/MyEnergyKit --target MyEnergyUI` | 二维主题更新后构建通过 |
+| Mac | `./scripts/build.sh MyEnergyMac` | 二维主题更新后的最新通用目标构建通过，实际启动 |
+| iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | 二维主题更新后的最新通用模拟器目标通过，包含 Watch companion |
+| Watch | 本轮 `./scripts/build.sh MyEnergyiOS` 中的 Watch 依赖目标 | 二维主题更新后的 companion 构建通过；独立 Watch scheme 的历史构建日志另行保留 |
 | 配置 | `plutil -lint Configuration/*.plist Configuration/*.entitlements`、`zsh -n scripts/*.sh` | 通过 |
 
-本机执行日志为 swift-tests.log、server-tests.log 和 build-mac／build-ios／build-watch.log，未纳入 Git。AppIntents 元数据提示表示未依赖该框架而跳过提取，不影响构建。
+本轮主题测试日志为 theme-tests.log；早期 swift-tests.log 单独保留为历史验证记录。服务与原生构建日志包括 server-tests.log 和 build-mac／build-ios／build-watch.log，均未纳入 Git。AppIntents 元数据提示表示未依赖该框架而跳过提取，不影响构建。
 
 ## Mac 实际交互
 
@@ -71,3 +72,19 @@ Watch 回归覆盖异步 namespace 串行／合并、旧账号队列隔离、ACK
 Mac 实际操作：新增“睡眠”侧栏与今日卡片；空态无伪造数值；补记默认昨夜 23:00 至今晨 07:00，明确为自述时段估算；输入“睡眠功能验收样例，非真实睡眠测量。”，取消后重开仍保留草稿；保存后显示 8.0 小时和 1／7 有观测日；切换 30 天显示 1／30，均值仍为 8.0 小时，其余日为空；退出并重新启动后今日卡片仍显示同一记录。没有读取真实健康数据或进行真实 Apple 登录。
 
 原始睡眠历史只存在 HealthReport 临时数据中；健康摘要仍须明确共享，且只写入选定最新 SleepNight。手动补记作为用户填写的应用记录进入当前账号的加密同步。全部代码沿用原生与本地开发阶段，不宣称真机睡眠检测、分期或睡眠质量评分通过。
+
+## 二维状态主题增量
+
+本轮完整 `./scripts/test-local.sh` 已通过：35 项 XCTest、71 项 Swift Testing，合计 106 项 Swift 测试，另有 8 项 Node 服务测试。相较睡眠观测阶段新增 17 项 Swift 回归。`swift build --package-path Packages/MyEnergyKit --target MyEnergyUI` 和最新 Mac／iOS 通用目标构建均成功，iOS 构建包含 Watch companion。独立 review 检查本次主题变更及直接依赖，未确认 P1／P2 问题。
+
+主题将心情 valence（-1～1）与精力 vitality（0～1）分别解析和连续插值；心情决定色彩倾向，精力改变鲜明程度。未知心情不显示积极百分比，未知精力采用中等鲜明度并保留未知标志。最近 24 小时内最新有效主观记录驱动主题，未来、过期、无记录和非法输入采用对应降级。双轴约 1.6 秒缓动过渡；开启减少动态效果时关闭动画。逐窗口 token 管理临时预览，取消后恢复，预览不落盘。设置中的四个样例只展示配色。
+
+自动回归覆盖两维独立映射、不同精力下的未知心情、低精力好心情与高精力低落、时间边界及稳定选择、连续中间色，以及预览覆盖、token／状态实例隔离、取消恢复和直接调用 `clear()` 后清空全部预览。Host 在 `storageURL`／`isDemo` 变化时清空预览的接入路径经代码 review 检查，本次退出示例也有原生交互证据；自动测试没有直接触发这些 SwiftUI `onChange` hook。
+
+对比度数值测试在心情和精力各取 21 点，分别检查浅色／深色、普通／增强对比度下声明的语义颜色组合：`ink`、`secondary` 和 `accent` 对 `canvas`／`surface`／`accentSoft`，以及 `onAccent` 对 `accent`。正文阈值普通模式为 4.5:1、增强模式为 7:1；强调色阈值分别为 3:1 和 4.5:1。这些采样不等于完整屏幕及所有控件背景通过可读性验收，具体呈现仍需设备 UI 验证。颜色值属于产品设计，测试通过也不代表已验证颜色的心理效果。
+
+Mac 原生界面在独立示例空间中已实际观察以下组合：低落＋精力 0 呈灰紫；低落＋精力 100 呈莓紫；无心情＋精力 100 保持中性鼠尾草；高兴＋精力 100 呈金杏；高兴＋精力 0 呈柔和蓝绿。取消编辑后回到示例原有 12 条记录。将一条明确标记的验收示例保存到示例空间后，首页显示积极方向、较柔和，记录数由 12 变为 13；切换睡眠页再返回仍保留该状态。退出示例后恢复原有 4 条本机记录，临时示例未进入本人空间。以上仅记录聚合数量，不记录本人记录的时间、分值或心情。
+
+浅色／深色和增强对比度的可读性证据限于上述语义颜色组合的数值采样；减少动态效果的关闭动画路径来自代码 review。本轮未在原生系统设置中切换实测浅色、增强对比度或减少动态效果，因此这些项目未记为原生系统交互通过。完整屏幕、控件背景组合及系统辅助设置仍待设备 UI 验收。
+
+本机无可用 Simulator runtime，本轮原生交互观察仅来自 Mac。真实 Apple 登录、HealthKit 授权／样本及配对 Watch 联通均未测试；通用目标编译不替代这些证据。

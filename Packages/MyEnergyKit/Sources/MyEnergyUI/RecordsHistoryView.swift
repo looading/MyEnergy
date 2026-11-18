@@ -4,6 +4,7 @@ import MyEnergyCore
 
 /// 不限制时间范围，补记到更早日期的记录也能重新找到。
 struct RecordsHistoryView: View {
+    @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     @State private var selectedEntry: EnergyEntry?
 
@@ -26,21 +27,21 @@ struct RecordsHistoryView: View {
                 List {
                     Section {
                         Text("共 \(model.snapshot.entries.count) 条主观记录，按每条记录保存的当地日期归档，包含全部历史日期。")
-                            .font(.footnote).foregroundStyle(EnergyStyle.secondary)
-                            .listRowBackground(EnergyStyle.surface)
+                            .font(.footnote).foregroundStyle(theme.secondary)
+                            .listRowBackground(theme.surface)
                     }
                     ForEach(days) { day in
                         Section(day.key) {
                             ForEach(day.entries) { entry in
                                 Button { selectedEntry = entry } label: { EntryRow(entry: entry) }
-                                    .buttonStyle(.plain).listRowBackground(EnergyStyle.surface)
+                                    .buttonStyle(.plain).listRowBackground(theme.surface)
                             }
                         }
                     }
                 }.scrollContentBackground(.hidden)
             }
         }
-        .background(EnergyStyle.canvas)
+        .background(theme.canvas)
         .navigationTitle("全部记录")
         .sheet(item: $selectedEntry) { entry in EntryDetailView(model: model, entryID: entry.id) }
     }

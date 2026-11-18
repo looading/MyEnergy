@@ -1,40 +1,8 @@
 import SwiftUI
 import MyEnergyCore
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
-
-enum EnergyStyle {
-    static let canvas = adaptive(light: (0.973, 0.969, 0.937), dark: (0.071, 0.102, 0.086))
-    static let surface = adaptive(light: (1, 1, 0.985), dark: (0.114, 0.153, 0.129))
-    static let ink = adaptive(light: (0.110, 0.180, 0.141), dark: (0.898, 0.941, 0.898))
-    static let secondary = adaptive(light: (0.325, 0.384, 0.345), dark: (0.678, 0.769, 0.698))
-    static let forest = adaptive(light: (0.184, 0.384, 0.290), dark: (0.588, 0.800, 0.631))
-    static let sage = adaptive(light: (0.863, 0.914, 0.847), dark: (0.184, 0.282, 0.208))
-    static let line = adaptive(light: (0.843, 0.871, 0.831), dark: (0.255, 0.337, 0.275))
-
-    private static func adaptive(light: (Double, Double, Double), dark: (Double, Double, Double)) -> Color {
-        #if os(watchOS)
-        Color(red: dark.0, green: dark.1, blue: dark.2)
-        #elseif canImport(UIKit)
-        Color(UIColor { traits in
-            let rgb = traits.userInterfaceStyle == .dark ? dark : light
-            return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
-        })
-        #elseif canImport(AppKit)
-        Color(NSColor(name: nil) { appearance in
-            let rgb = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light
-            return NSColor(srgbRed: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
-        })
-        #else
-        Color(red: dark.0, green: dark.1, blue: dark.2)
-        #endif
-    }
-}
 
 struct EnergyCard<Content: View>: View {
+    @Environment(\.energyTheme) private var theme
     let content: Content
 
     init(@ViewBuilder content: () -> Content) { self.content = content() }
@@ -42,19 +10,20 @@ struct EnergyCard<Content: View>: View {
     var body: some View {
         content.padding(22)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(EnergyStyle.surface, in: RoundedRectangle(cornerRadius: 24))
-            .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(EnergyStyle.line.opacity(0.65), lineWidth: 1))
+            .background(theme.surface, in: RoundedRectangle(cornerRadius: 24))
+            .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(theme.border.opacity(0.65), lineWidth: 1))
     }
 }
 
 struct SectionHeading: View {
+    @Environment(\.energyTheme) private var theme
     let title: String
     var subtitle: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(title).font(.title3.weight(.semibold)).foregroundStyle(EnergyStyle.ink)
-            if let subtitle { Text(subtitle).font(.subheadline).foregroundStyle(EnergyStyle.secondary) }
+            Text(title).font(.title3.weight(.semibold)).foregroundStyle(theme.ink)
+            if let subtitle { Text(subtitle).font(.subheadline).foregroundStyle(theme.secondary) }
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
@@ -62,74 +31,81 @@ struct SectionHeading: View {
 }
 
 struct StatusPill: View {
+    @Environment(\.energyTheme) private var theme
     let text: String
     var symbol: String = "internaldrive"
 
     var body: some View {
         Label(text, systemImage: symbol)
-            .font(.caption.weight(.medium)).foregroundStyle(EnergyStyle.secondary)
+            .font(.caption.weight(.medium)).foregroundStyle(theme.secondary)
             .padding(.horizontal, 11).padding(.vertical, 7)
-            .background(EnergyStyle.sage.opacity(0.6), in: Capsule())
+            .background(theme.accentSoft.opacity(0.6), in: Capsule())
     }
 }
 
 struct EmptyState: View {
+    @Environment(\.energyTheme) private var theme
     let symbol: String
     let title: String
     let message: String
 
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: symbol).font(.system(size: 30, weight: .light)).foregroundStyle(EnergyStyle.forest)
-                .frame(width: 68, height: 68).background(EnergyStyle.sage, in: RoundedRectangle(cornerRadius: 24))
-            Text(title).font(.headline).foregroundStyle(EnergyStyle.ink)
-            Text(message).font(.subheadline).foregroundStyle(EnergyStyle.secondary)
+            Image(systemName: symbol).font(.system(size: 30, weight: .light)).foregroundStyle(theme.accent)
+                .frame(width: 68, height: 68).background(theme.accentSoft, in: RoundedRectangle(cornerRadius: 24))
+            Text(title).font(.headline).foregroundStyle(theme.ink)
+            Text(message).font(.subheadline).foregroundStyle(theme.secondary)
                 .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity).padding(.vertical, 24)
     }
 }
 
 struct InlineError: View {
+    @Environment(\.energyTheme) private var theme
     let message: String
 
     var body: some View {
         Label(message, systemImage: "exclamationmark.circle")
-            .font(.callout).foregroundStyle(.red)
+            .font(.callout).foregroundStyle(theme.ink)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel("操作未完成。\(message)")
     }
 }
 
 struct PrimaryButtonStyle: ButtonStyle {
+    @Environment(\.energyTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.body.weight(.semibold))
             .frame(maxWidth: .infinity, minHeight: 48)
-            .foregroundStyle(EnergyStyle.surface)
-            .background(EnergyStyle.forest.opacity(configuration.isPressed ? 0.8 : 1), in: RoundedRectangle(cornerRadius: 15))
+            .foregroundStyle(theme.onAccent)
+            .background(theme.accent, in: RoundedRectangle(cornerRadius: 15))
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
     }
 }
 
 struct EnergyRing: View {
+    @Environment(\.energyTheme) private var theme
     let value: Int?
     var size: CGFloat = 170
 
     var body: some View {
         ZStack {
-            Circle().stroke(EnergyStyle.sage, lineWidth: 12)
+            Circle().stroke(theme.accentSoft, lineWidth: 12)
             if let value {
                 Circle().trim(from: 0, to: max(0.006, Double(value) / 100))
-                    .stroke(EnergyStyle.forest, style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                    .stroke(theme.accent, style: StrokeStyle(lineWidth: 12, lineCap: .round))
                     .rotationEffect(.degrees(-90))
             }
             VStack(spacing: 0) {
                 if let value {
                     Text("\(value)").font(.system(size: size * 0.31, weight: .medium, design: .rounded)).monospacedDigit()
-                    Text("/ 100").font(.caption).foregroundStyle(EnergyStyle.secondary)
+                    Text("/ 100").font(.caption).foregroundStyle(theme.secondary)
                 } else {
                     Image(systemName: "leaf").font(.system(size: size * 0.26, weight: .ultraLight))
                     Text("从此刻开始").font(.caption).padding(.top, 8)
                 }
-            }.foregroundStyle(EnergyStyle.ink)
+            }.foregroundStyle(theme.ink)
         }.frame(width: size, height: size)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(value.map { "主观精力，\($0)，满分 100" } ?? "尚未记录主观精力")
@@ -138,13 +114,14 @@ struct EnergyRing: View {
 
 /// 五种表情独立于精力选择，不使用红绿灯等级。
 struct MoodGlyph: View {
+    @Environment(\.energyTheme) private var theme
     let mood: Mood
     var size: CGFloat = 34
 
     var body: some View {
         ZStack {
-            Circle().fill(EnergyStyle.sage)
-            FaceLines(mood: mood).stroke(EnergyStyle.ink, style: StrokeStyle(lineWidth: size / 25, lineCap: .round))
+            Circle().fill(theme.accentSoft)
+            FaceLines(mood: mood).stroke(theme.ink, style: StrokeStyle(lineWidth: size / 25, lineCap: .round))
                 .padding(size * 0.20)
         }.frame(width: size, height: size).accessibilityHidden(true)
     }

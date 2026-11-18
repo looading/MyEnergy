@@ -17,6 +17,7 @@
 ## 当前功能
 
 - 今日看板、0～100 主观精力、五档独立心情、备注和发生时间。
+- 二维连续状态主题：心情决定色彩倾向，精力独立改变鲜明程度；按最近 24 小时有效记录变化，编辑时可临时预览，取消后恢复。设置中有四个只读配色示例。
 - 记录新增、详情、编辑、删除和完整历史入口。
 - 习惯创建、编辑、停用、恢复、完成与撤销。
 - 7／30 天趋势及等价逐日列表，缺失日不计为零。
@@ -29,6 +30,8 @@
 - Watch 持久队列、账号命名空间、因果基线、显式保存确认和冲突选择。
 
 精力与心情来自自评，身体参考独立展示。健康摘要默认关闭；仅在用户单独同意后同步选定的当前摘要，不包含 HealthKit 原始样本或历史序列。Mac 可显示来源、采样时间和更新时间。
+
+体验主题时，点击“记一下”并调整精力或心情，可看到约 1.6 秒的连续过渡；取消会恢复当前记录的配色。“我的 → 状态主题”展示四组独立输入的示例，未填写心情时保留中性含义。开启系统“减少动态效果”后关闭该过渡。
 
 ## 本机加密同步
 
@@ -74,6 +77,8 @@ MYENERGY_TEST_SYNC_URL=http://127.0.0.1:8787 ./scripts/test.sh
 
 直接运行通用测试且不配置服务地址时，三项双客户端测试及八项账号生命周期测试会明确跳过；本轮验收使用 test-local.sh，相关用例全部实际执行。iPhone 和 iPad 共用 iOS target，device family 为 1、2；构建串行执行。
 
+本轮二维主题更新后，`swift build --package-path Packages/MyEnergyKit --target MyEnergyUI`、完整 `./scripts/test-local.sh`、Mac 与 iPhone／iPad 通用目标构建均通过；iOS 构建包含 Watch companion。测试合计 106 项 Swift（35 XCTest、71 Swift Testing）和 8 项 Node 服务测试。主题独立 review 未确认 P1／P2 问题。Mac 已实际验证示例中的主题组合、取消回退、保存后保持及退出示例隔离；系统辅助功能与其他平台的验证边界见[验证报告](docs/verification/report.md)。
+
 本机目前没有可用 Simulator runtime。通用目标编译不能算作模拟器或真机运行通过。
 
 ## 真机配置
@@ -97,3 +102,4 @@ HealthKit 需要支持设备及授权；空结果不能证明拒绝授权。Watc
 - [Apple 平台依据](docs/research/apple-platform-feasibility.md)
 
 睡眠观测的日期与时区、来源优先级和数据边界见 [睡眠增量说明](docs/implementation/sleep-observation.md)。
+二维主题的状态来源、未知状态与过渡规则见[状态主题说明](docs/implementation/state-theme.md)；颜色设计依据与适用限制见[颜色心理学核查](docs/research/color-psychology.md)。
