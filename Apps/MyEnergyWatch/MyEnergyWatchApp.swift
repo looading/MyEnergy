@@ -14,7 +14,12 @@ struct MyEnergyWatchApp: App {
   var body: some Scene {
     WindowGroup {
       MyEnergyWatchView(model: model).task { await devices.start() }
-        .onChange(of: scenePhase) { _, phase in if phase == .active { devices.retry() } }
+        .onChange(of: scenePhase) { _, phase in
+          if phase == .active {
+            devices.retry()
+            Task { await model.refreshHealthIfNeeded() }
+          }
+        }
     }
   }
 }

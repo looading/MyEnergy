@@ -1,7 +1,10 @@
 import SwiftUI
 import MyEnergyCore
+#if os(watchOS)
+import WatchKit
+#endif
 
-/// 手表提供快记、习惯和最近睡眠参考，一次只完成一件事。
+/// 首页保留日常快记，身体、睡眠与设备设置分别展开。
 public struct MyEnergyWatchView: View {
     @ObservedObject private var model: AppModel
 
@@ -17,7 +20,6 @@ public struct MyEnergyWatchView: View {
 private struct MyEnergyWatchContent: View {
     @Environment(\.energyTheme) private var theme
     @ObservedObject private var model: AppModel
-    @AppStorage("myenergy.hapticsEnabled") private var hapticsEnabled = true
 
     init(model: AppModel) { self.model = model }
 
@@ -27,7 +29,6 @@ private struct MyEnergyWatchContent: View {
                 if model.isDemo {
                     Section {
                         Label("示例空间 · 不保存或同步", systemImage: "sparkles").font(.caption)
-                        Button("退出示例") { model.exitDemo() }
                     }.listRowBackground(theme.surface)
                 }
                 Section {
@@ -57,26 +58,16 @@ private struct MyEnergyWatchContent: View {
                             .font(.callout).foregroundStyle(theme.secondary).padding(.vertical, 4)
                     }
                 }.listRowBackground(theme.surface)
-                Section("最近睡眠 · 独立参考") {
-                    if let observation = model.latestSleepObservation {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("\(observation.durationHours.formatted(.number.precision(.fractionLength(1)))) 小时", systemImage: "moon.stars")
-                                .font(.title3.weight(.medium)).monospacedDigit()
-                            Text(observation.isEstimated ? "自述时段估算" : "实际睡眠观测")
-                                .font(.caption).foregroundStyle(theme.secondary)
-                            Text(observation.sourceTitle).font(.caption2).foregroundStyle(theme.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text("开始 \(sleepDateText(observation.bedtime, timeZoneIdentifier: observation.timeZoneIdentifier))")
-                                .font(.caption2).foregroundStyle(theme.secondary)
-                            Text("结束 \(sleepDateText(observation.wakeTime, timeZoneIdentifier: observation.timeZoneIdentifier))")
-                                .font(.caption2).foregroundStyle(theme.secondary)
-                            Text("时区 \(observation.timeZoneIdentifier)").font(.caption2).foregroundStyle(theme.secondary)
-                            Text(observation.isEstimated ? "整个自述时段可能包含清醒时间。" : "起止时间为观测边界，无法确定真正入睡或起床时刻。")
-                                .font(.caption2).foregroundStyle(theme.secondary).fixedSize(horizontal: false, vertical: true)
-                        }.padding(.vertical, 4).accessibilityElement(children: .combine)
-                    } else {
-                        Text("暂无带时间信息的睡眠观测。可在 iPhone 上补记，或按需连接 Apple 健康。")
-                            .font(.caption).foregroundStyle(theme.secondary)
+                Section("独立参考") {
+                    NavigationLink {
+                        WatchHealthView(model: model)
+                    } label: {
+                        destinationLabel("身体参考", symbol: "heart.text.square", detail: healthSummary)
+                    }
+                    NavigationLink {
+                        WatchSleepView(model: model)
+                    } label: {
+                        destinationLabel("睡眠详情", symbol: "moon.stars", detail: sleepSummary)
                     }
                 }.listRowBackground(theme.surface)
                 Section("今天的小习惯") {
@@ -102,19 +93,13 @@ private struct MyEnergyWatchContent: View {
                         }
                     }
                 }.listRowBackground(theme.surface)
-                Section("状态") {
-                    if let devices = AppDeviceCoordinator.current { WatchTransportSettingsView(coordinator: devices) }
-                    Text(model.localStatus).font(.caption)
-                    Toggle("触觉反馈", isOn: $hapticsEnabled).font(.caption)
-                    Text("记录先保存在手表。传输和设备确认状态请在配对 iPhone 查看。")
-                        .font(.caption2).foregroundStyle(theme.secondary)
-                    if model.hasLoadFailure {
-                        Button("重试读取本机记录") { Task { await model.load() } }.disabled(model.isSaving)
+                Section {
+                    NavigationLink {
+                        WatchSettingsView(model: model)
+                    } label: {
+                        destinationLabel("设备与设置", symbol: "gearshape", detail: model.localStatus)
                     }
                     if let error = model.errorMessage { InlineError(message: error) }
-                    if !model.isDemo {
-                        Button("体验独立示例") { model.startDemo() }.font(.caption).disabled(!model.canEdit)
-                    }
                 }.listRowBackground(theme.surface)
             }
             .scrollContentBackground(.hidden)
@@ -125,6 +110,29 @@ private struct MyEnergyWatchContent: View {
             .listStyle(.carousel)
             #endif
         }.tint(theme.accent)
+    }
+
+    private var healthSummary: String {
+        if model.isDemo { return "示例不读取健康数据" }
+        if model.isRefreshingHealth { return "正在请求或读取…" }
+        if model.healthError != nil { return "读取未完成，可查看并重试" }
+        if model.healthReportHasData { return "查看本机数据与采样时间" }
+        if model.latestSharedHealthSummary != nil { return "查看已共享的设备摘要" }
+        return model.healthConnected ? "暂无可读样本" : "按需连接 Apple 健康"
+    }
+
+    private var sleepSummary: String {
+        guard let observation = model.latestSleepObservation else { return "最近观测与近 7 天记录" }
+        let hours = observation.durationHours.formatted(.number.precision(.fractionLength(1)))
+        return "最近 \(hours) 小时 · \(observation.isEstimated ? "手动估算" : "查看来源")"
+    }
+
+    private func destinationLabel(_ title: String, symbol: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(title, systemImage: symbol).font(.headline)
+            Text(detail).font(.caption).foregroundStyle(theme.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).padding(.vertical, 4)
     }
 }
 
@@ -149,26 +157,31 @@ private struct WatchQuickRecordView: View {
                     Text(model.isDemo ? "已记录到示例空间" : "手表本机已保存").font(.headline).multilineTextAlignment(.center)
                     Text(model.isDemo ? "退出示例后，真实记录保持原样。" : "后续传输由设备连接处理，无需重复填写。")
                         .font(.caption).foregroundStyle(theme.secondary).multilineTextAlignment(.center)
-                    Button("完成") { dismiss() }.buttonStyle(.borderedProminent).foregroundStyle(theme.onAccent)
+                    Button { dismiss() } label: { Text("完成").frame(maxWidth: .infinity, minHeight: 44) }
+                        .buttonStyle(.borderedProminent).foregroundStyle(theme.onAccent)
                 } else {
                     Text("主观自评").font(.caption).foregroundStyle(theme.secondary)
-                    crownControl
+                    crownControl.disabled(model.isSaving)
                     HStack(spacing: 18) {
                         Button { energy = max(0, energy - 5) } label: { Image(systemName: "minus").frame(minWidth: 44, minHeight: 44) }
                             .accessibilityLabel("精力减少 5")
                         Button { energy = min(100, energy + 5) } label: { Image(systemName: "plus").frame(minWidth: 44, minHeight: 44) }
                             .accessibilityLabel("精力增加 5")
-                    }.buttonStyle(.bordered)
+                    }.buttonStyle(.bordered).disabled(model.isSaving)
                     Picker("心情 · 可选", selection: $mood) {
                         Text("暂不填写").tag(Mood?.none)
                         ForEach(Mood.allCases, id: \.self) { choice in Text(choice.title).tag(Optional(choice)) }
-                    }.accessibilityLabel("心情，可选，与精力独立")
+                    }.accessibilityLabel("心情，可选，与精力独立").disabled(model.isSaving)
                     if let saveError { InlineError(message: saveError) }
                     Button {
                         Task {
+                            saveError = nil
                             if await model.saveEntry(energy: Int(energy), mood: mood, note: "", occurredAt: Date()) {
                                 didSave = true
-                            } else { saveError = model.errorMessage }
+                                #if os(watchOS)
+                                if hapticsEnabled { WKInterfaceDevice.current().play(.success) }
+                                #endif
+                            } else { saveError = model.errorMessage ?? "尚未保存，请稍后重试。" }
                         }
                     } label: {
                         Text(model.isSaving ? "保存中…" : "保存这次感受").frame(maxWidth: .infinity, minHeight: 44)

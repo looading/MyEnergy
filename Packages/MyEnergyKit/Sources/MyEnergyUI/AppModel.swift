@@ -35,6 +35,13 @@ public final class AppModel: ObservableObject {
     private var healthSharingGenerationID: UUID?
     private var realSnapshot: AppSnapshot?
     private var healthGeneration = 0
+    private var healthOperationID: UUID?
+    private var lastHealthQueryAttempt: Date?
+    #if os(watchOS)
+    @Published private var companionHealthNamespace: String? = "local-paired"
+    #else
+    @Published private var companionHealthNamespace: String?
+    #endif
 
     public convenience init(storageURL: URL? = nil) {
         self.init(storageURL: storageURL, healthClient: HealthDataClient(), preferences: .standard)
@@ -63,7 +70,21 @@ public final class AppModel: ObservableObject {
 
     public var healthIsAvailable: Bool { healthClient.isAvailable }
     public var hasHealthSharingAccountContext: Bool {
-        !isDemo && storageURL.standardizedFileURL != Self.defaultStorageURL.standardizedFileURL
+        guard !isDemo else { return false }
+        if let namespace = companionHealthNamespace {
+            let components = namespace.split(separator: ":", omittingEmptySubsequences: false)
+            return namespace.utf8.count <= 128 && components.count == 3 && components[0] == "account"
+                && !components[1].isEmpty && !components[2].isEmpty
+                && namespace.unicodeScalars.allSatisfy { $0.value >= 33 && $0.value <= 126 }
+        }
+        return storageURL.standardizedFileURL != Self.defaultStorageURL.standardizedFileURL
+    }
+
+    /// 配对协调器在成功采用数据空间后显式传入；文件路径不能代表配对账号身份。
+    func updateCompanionHealthContext(namespace: String) {
+        guard companionHealthNamespace != namespace else { return }
+        disconnectHealth()
+        companionHealthNamespace = namespace
     }
     public var healthReportHasData: Bool { healthReport.map(Self.hasData) ?? false }
     public var ownSharedHealthSummaryCount: Int {
@@ -291,36 +312,50 @@ public final class AppModel: ObservableObject {
     }
 
     public func connectHealth() async {
-        guard !isDemo, !isRefreshingHealth else { return }
+        guard !isDemo, !healthConnected, !isRefreshingHealth else { return }
         guard healthIsAvailable else {
             healthError = "这台设备不支持读取 Apple 健康。主观记录和习惯可以照常使用。"
             return
         }
-        let generation = healthGeneration
-        isRefreshingHealth = true
-        defer { isRefreshingHealth = false }
-        do {
-            try await healthClient.requestReadAccess()
-            guard !isDemo, generation == healthGeneration else { return }
-            healthConnected = true
-            let report = try await healthClient.fetchReport(now: Date())
-            guard !isDemo, healthConnected, generation == healthGeneration else { return }
-            healthReport = report
-            healthError = nil
-            if healthSharingEnabled { _ = await shareLatestHealthReport() }
-        } catch {
-            guard generation == healthGeneration else { return }
-            healthError = error.localizedDescription
-        }
+        await readHealth(requestAuthorization: true)
     }
 
     public func refreshHealth() async {
         guard healthConnected, !isDemo, !isRefreshingHealth else { return }
+        await readHealth(requestAuthorization: false)
+    }
+
+    /// 前台仅重读已主动连接的数据；按最近查询尝试节流，失败也不会反复自动查询。
+    public func refreshHealthIfNeeded(now: Date = Date()) async {
+        guard healthConnected, !isDemo, !isRefreshingHealth, now.timeIntervalSinceReferenceDate.isFinite else { return }
+        if let lastHealthQueryAttempt {
+            let elapsed = now.timeIntervalSince(lastHealthQueryAttempt)
+            if elapsed >= 0 && elapsed < 5 * 60 { return }
+        }
+        await readHealth(requestAuthorization: false, now: now)
+    }
+
+    private func readHealth(requestAuthorization: Bool, now: Date? = nil) async {
         let generation = healthGeneration
+        let operationID = UUID()
+        healthOperationID = operationID
         isRefreshingHealth = true
-        defer { isRefreshingHealth = false }
+        defer {
+            // 停止、切空间后可以重新连接；旧任务不得清除新任务的读取状态。
+            if healthOperationID == operationID {
+                healthOperationID = nil
+                isRefreshingHealth = false
+            }
+        }
         do {
-            let report = try await healthClient.fetchReport(now: Date())
+            if requestAuthorization {
+                try await healthClient.requestReadAccess()
+                guard generation == healthGeneration, !isDemo else { return }
+                healthConnected = true
+            }
+            let queryDate = now ?? Date()
+            lastHealthQueryAttempt = queryDate
+            let report = try await healthClient.fetchReport(now: queryDate)
             guard generation == healthGeneration, healthConnected, !isDemo else { return }
             healthReport = report
             healthError = nil
@@ -333,6 +368,9 @@ public final class AppModel: ObservableObject {
 
     public func disconnectHealth() {
         healthGeneration += 1
+        healthOperationID = nil
+        lastHealthQueryAttempt = nil
+        isRefreshingHealth = false
         healthConnected = false
         healthReport = nil
         healthError = nil
@@ -342,7 +380,9 @@ public final class AppModel: ObservableObject {
 
     /// 仅用户明确开启后，把当前摘要加入当前账号的加密记录空间。
     @discardableResult
-    public func setHealthSharing(_ enabled: Bool) async -> Bool {
+    public func setHealthSharing(_ enabled: Bool, expectedStorageURL: URL? = nil) async -> Bool {
+        // 确认期间可能切换账号；旧确认不得停止或发布新空间的摘要。
+        if let expectedStorageURL, expectedStorageURL != storageURL { return false }
         if !enabled {
             // 即使磁盘暂时写入失败，也立即停止后续新增分享；删除仍需重试保存。
             healthSharingEnabled = false

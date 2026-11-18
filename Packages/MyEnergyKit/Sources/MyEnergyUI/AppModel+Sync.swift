@@ -40,6 +40,9 @@ public final class AppDeviceCoordinator: ObservableObject {
       #if os(watchOS)
       let url = Self.watchStorageURL(namespace: namespace)
       if self.model.storageURL != url { try await self.model.switchStorage(to: url) }
+      self.model.updateCompanionHealthContext(namespace: namespace)
+      self.pendingConflict = nil
+      self.peerConflictCount = 0
       #endif
     }
     bridge.onAcknowledged = { [weak self] acknowledged, sentBase in
@@ -80,6 +83,7 @@ public final class AppDeviceCoordinator: ObservableObject {
       #if os(watchOS)
       let target = Self.watchStorageURL(namespace: bridge.activeNamespace)
       if model.storageURL != target { try await model.switchStorage(to: target) }
+      model.updateCompanionHealthContext(namespace: bridge.activeNamespace)
       #else
       try bridge.setNamespace(Self.namespace(for: model.storageURL))
       storageObservation = model.$storageURL.dropFirst().sink { [weak self] newURL in

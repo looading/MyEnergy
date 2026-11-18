@@ -1,20 +1,23 @@
 # 首版验证报告
 
-日期：2026-11-18。范围为本地 MVP、睡眠观测、二维状态主题、通用目标编译和开发身份加密同步。真实四端账号互联和发布尚未验收。
+日期：2026-11-18。范围为本地 MVP、睡眠观测、二维状态主题、Watch 本机功能补齐、通用目标编译和开发身份加密同步。真实四端账号互联和发布尚未验收。当前最新完整本地测试、review 修复后的最终三目标构建与配对模拟器安装均通过；MyEnergy 原生 UI 尚未验收，当前阻塞为 Mac 锁屏，等待用户手动解锁。
 
 ## 已通过检查
 
 | 检查 | 命令与条件 | 结果 |
 | --- | --- | --- |
-| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 最新 106 项通过：35 XCTest、71 Swift Testing；0 失败，双客户端及账号生命周期全部实际执行 |
+| Swift | `./scripts/test-local.sh` 自动创建独立本机服务 | 最新 124 项通过：35 XCTest、89 Swift Testing；0 失败、0 跳过，双客户端及账号生命周期全部实际执行 |
 | 服务 | `node --test server/test/*.test.mjs` | 8 项通过，0 失败 |
-| MyEnergyUI | `swift build --package-path Packages/MyEnergyKit --target MyEnergyUI` | 二维主题更新后构建通过 |
-| Mac | `./scripts/build.sh MyEnergyMac` | 二维主题更新后的最新通用目标构建通过，实际启动 |
-| iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | 二维主题更新后的最新通用模拟器目标通过，包含 Watch companion |
-| Watch | 本轮 `./scripts/build.sh MyEnergyiOS` 中的 Watch 依赖目标 | 二维主题更新后的 companion 构建通过；独立 Watch scheme 的历史构建日志另行保留 |
-| 配置 | `plutil -lint Configuration/*.plist Configuration/*.entitlements`、`zsh -n scripts/*.sh` | 通过 |
+| MyEnergyUI | `swift build --package-path Packages/MyEnergyKit --target MyEnergyUI`；本轮完整 Swift 回归 | 二维主题阶段独立构建通过；Watch 补齐后的共享包随最新回归通过 |
+| Mac | `./scripts/build.sh MyEnergyMac` | 跨账号旧确认修复后的最终通用目标 `BUILD SUCCEEDED`；本轮未改动已有 Mac 数据，历史实际启动证据保留 |
+| iPhone／iPad | `./scripts/build.sh MyEnergyiOS` | 跨账号旧确认修复后的最终通用模拟器目标 `BUILD SUCCEEDED`，包含 Watch companion |
+| Watch | `./scripts/build.sh MyEnergyWatch` | 跨账号旧确认修复后的最终独立 scheme 通用目标 `BUILD SUCCEEDED` |
+| 配置 | `plutil -lint Configuration/*.plist Configuration/*.entitlements`、`zsh -n scripts/*.sh` | 历史静态检查通过；新增模拟器准备路径在本轮 `--prepare-only` 实际执行成功 |
+| 模拟器环境 | Xcode 官方 runtime 安装及专用设备准备 | iOS 27.2、watchOS 27.2 runtime 已可用；专用 iPhone 18 Pro／Apple Watch Series 12（42 mm）已启动并配对 |
+| 模拟器构建与安装 | `./scripts/run-watch.sh --prepare-only` | DeviceDebug ad-hoc iPhone／Watch 构建通过，两端应用安装成功；从实际 arm64 可执行文件断言两端内嵌 `com.apple.developer.healthkit=true` |
+| 独立复核 | 跨账号旧确认修复及直接依赖 | P2 已复核关闭，当前未解决的确定 P1／P2 为 0；不等于应用 UI 或真机验收通过 |
 
-本轮主题测试日志为 theme-tests.log；早期 swift-tests.log 单独保留为历史验证记录。服务与原生构建日志包括 server-tests.log 和 build-mac／build-ios／build-watch.log，均未纳入 Git。AppIntents 元数据提示表示未依赖该框架而跳过提取，不影响构建。
+主题阶段日志为 theme-tests.log；早期 swift-tests.log 单独保留为历史验证记录。服务与早期构建日志包括 server-tests.log 和 build-mac／build-ios／build-watch.log。本轮修复后最终日志为 `build-MyEnergyWatch-completion.log`、`build-MyEnergyiOS-completion.log`、`build-MyEnergyMac-completion.log`，三项均 `BUILD SUCCEEDED`；专用配对模拟器准备日志为 `watch-simulator-prepare.log`，构建和两端安装成功。日志均未纳入 Git。AppIntents 元数据提示表示未依赖该框架而跳过提取，不影响构建。
 
 ## Mac 实际交互
 
@@ -34,7 +37,7 @@ Watch 回归覆盖异步 namespace 串行／合并、旧账号队列隔离、ACK
 
 | 项目 | 缺口 |
 | --- | --- |
-| iPhone／iPad／Watch UI 实际运行 | 无可用 Simulator runtime 或测试设备，通用编译不能验证实际屏幕 |
+| iPhone／iPad／Watch UI 实际运行 | runtime、配对启动及两端安装已通过。CUA 仅观察 Device Hub 的专用 Watch 表盘和配对指示，尚未打开 MyEnergy 时 Mac 锁屏；等待用户手动解锁，所有应用 UI 与辅助功能用例保持未验收，iPad 专项仍未运行 |
 | Apple Health 真数据 | 需要签名、授权及有历史样本的设备 |
 | Watch 后台互联 | 需要配对 iPhone／Watch，验证断连、后台、切账号和重启 |
 | 真实 Apple 身份 | 需要开发者团队、App ID 分组、签名与 audience；当前为受控签名夹具及开发身份 |
@@ -87,4 +90,24 @@ Mac 原生界面在独立示例空间中已实际观察以下组合：低落＋�
 
 浅色／深色和增强对比度的可读性证据限于上述语义颜色组合的数值采样；减少动态效果的关闭动画路径来自代码 review。本轮未在原生系统设置中切换实测浅色、增强对比度或减少动态效果，因此这些项目未记为原生系统交互通过。完整屏幕、控件背景组合及系统辅助设置仍待设备 UI 验收。
 
-本机无可用 Simulator runtime，本轮原生交互观察仅来自 Mac。真实 Apple 登录、HealthKit 授权／样本及配对 Watch 联通均未测试；通用目标编译不替代这些证据。
+二维主题阶段尚无可用 Simulator runtime，原生交互观察仅来自 Mac；当前 iOS／watchOS runtime 已安装，这项旧环境条件已解除。真实 Apple 登录、HealthKit 授权／样本及配对 Watch 真机联通均未测试；通用目标编译不替代这些证据。
+
+## Watch 本机功能补齐
+
+按[Watch 设计](../design/watch-completion.md)及[实施计划](../implementation/2026-11-18-watch-plan.md)交付：首页保留快记、最近自评和习惯，身体参考、睡眠详情、设备与设置分别展开。健康页只在用户点击时请求 HRV SDNN、静息心率和睡眠只读授权，区分请求中、读取中、无样本、失败、历史不足、过期和可用个人基线；列出 ms、采样时间、读取时间和来源。睡眠显示最近主要观测及近 7 天逐日列表，保留起止、来源和时区；缺失不补零，手动补记继续在 iPhone 完成。
+
+最新完整 `./scripts/test-local.sh` 已实际通过 35 项 XCTest、89 项 Swift Testing，共 124 项 Swift 测试，另有 8 项 Node 服务测试，0 失败、0 跳过；相较二维主题阶段新增 18 项 Swift 用例。健康生命周期以注入客户端测试，不调用真实 HealthKit，不创建合成健康样本。
+
+新增回归覆盖：未支持／未连接／示例不自动读取、授权失败显式重试、重复连接不重复请求、查询失败后保留连接、失败保留旧报告、手动刷新跳过节流、前台五分钟按最近尝试节流、空结果不推断拒绝、停止读取后晚到授权或报告失效、停止后重连的旧完成不能结束新操作，以及切空间／示例使在途结果失效。展示状态按传入当前时刻重新判断 HRV 24 小时过期。明确的 companion namespace 区分匿名与账号，匿名配对空间无法开启摘要共享；原始健康历史仍留本机，手表摘要经配对 iPhone 到同账号服务。
+
+独立 review 确认一项 P2：用户在旧账号打开共享确认后切换空间，旧确认可能作用于新账号。修复在 UI 打开确认时捕获原 storageURL，模型以 expectedStorageURL 再次校验；新增回归使用 AsyncStream 暂停实际异步操作，切换账号后恢复旧动作，验证旧确认不能启用或移除新空间摘要。上述完整测试结果包含此修复，P2 已经复核关闭，当前未解决的确定 P1／P2 为 0。修复后的 `MyEnergyWatch`、`MyEnergyiOS`（含 Watch）与 `MyEnergyMac` 最终通用目标构建全部 `BUILD SUCCEEDED`。
+
+Xcode 官方 iOS 27.2 和 watchOS 27.2 runtime 已安装可用，专用 iPhone 18 Pro 与 Apple Watch Series 12（42 mm）模拟器已启动并配对。`./scripts/run-watch.sh --prepare-only` 已成功：DeviceDebug ad-hoc iPhone／Watch 构建通过，两端应用安装成功。脚本会复用并激活自身专用 pair；默认启动路径在启动前结束已有应用进程，确保使用最新构建。
+
+本地模拟器签名的普通 codesign entitlement 输出为空属于 Simulator 机制，未据此改动签名。已用 `otool` 从两端实际 arm64 主可执行文件的 `__TEXT,__entitlements` 段解析 plist，并断言 `com.apple.developer.healthkit` 为 true。此检查证明本次模拟器产物携带声明，不能证明真实健康授权或查询成功。
+
+Xcode 27.2 的模拟器前端为 Device Hub，可从 Xcode → Open Developer Tool 打开。脚本优先打开 Device Hub，旧环境回退 Simulator。CUA 已实际观察专用 Watch 表盘与配对指示；尚未打开 MyEnergy 时 Mac 随即锁屏。CUA 无法自动解锁，已请用户手动解锁并等待。本轮阻塞来自锁屏，runtime、配对启动和应用安装条件均已满足；表盘可见不算 MyEnergy UI 通过。
+
+待补应用 UI 证据：打开 MyEnergy、快记本机保存及重启保留、独立心情与主题预览、习惯完成／撤销、睡眠缺失与来源、身体入口与无样本状态、匿名共享限制、设置与示例隔离、窄屏及动态字体。当前以上用例全部保持未验收。已有 Mac 本机数据本轮不作改动；不得通过导入或删除本人记录来准备界面。
+
+模拟器不能提供真实传感器或用户日常健康历史，也不能替代真实系统授权、后台配对送达、真机断连恢复和功耗验收。本轮没有新增独立 Watch 云登录、后台采样、widget、睡眠质量或压力分数；这些平台和范围边界继续保留。

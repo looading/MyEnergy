@@ -95,3 +95,9 @@ PM 在阶段门或发生重大变化时汇总“已完成且有证据、当前�
 | T4 | 独立 reviewer、root | T2、T3 集成 | 本次 diff review、串行验证和本地交付记录，已完成 | 106 项 Swift、8 项 Node 和最新 Mac／iOS（含 Watch）构建通过；无确认 P1／P2，iOS／Watch UI 仍缺 runtime 或设备 |
 
 工程验收记录见[验证报告](../verification/report.md)，表达规则见[状态主题说明](../implementation/state-theme.md)。用户对颜色含义和舒适度的体验评价仍可继续反馈，不将本轮技术通过记为 Sponsor 最终产品验收。
+
+## 手表补齐工作包
+
+用户明确要求“完成手表功能”，按[Watch 设计](../design/watch-completion.md)执行。W1 health model agent 负责本机健康生命周期、明确账号上下文与注入回归；W2 Watch UI agent 负责首页、身体、睡眠和设置；W3 root 负责配对与前台接入、运行脚本及模拟器准备；W4 root 与独立 reviewer 负责集成和验收。依赖沿用现有模型、健康适配器、配对通道及独立加密账号服务，不新增数据去向。
+
+W1～W3 源码和本地安装已交付，W4 的完整 124 项 Swift／8 项 Node 及最终 Watch／iOS／Mac 构建通过，独立 review 的已确认 P2 已修复复核。专用配对模拟器已启动，App 已安装；App 界面验收等待 Mac 手动解锁，未记录为通过。具体状态、证据及真机缺口见[验证报告](../verification/report.md)，不把工程通过当作最终业务验收。
