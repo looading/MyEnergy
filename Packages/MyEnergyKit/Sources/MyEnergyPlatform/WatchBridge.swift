@@ -3,6 +3,11 @@ import MyEnergyCore
 
 #if canImport(WatchConnectivity) && (os(iOS) || os(watchOS)) && !targetEnvironment(macCatalyst)
 @preconcurrency import WatchConnectivity
+
+// WCSession 的 Objective-C 回复 block 可在委托回调之外调用；只把该 block 转交主 actor 使用。
+private struct WatchMessageReply: @unchecked Sendable {
+  let callback: (Data) -> Void
+}
 #endif
 
 public enum WatchBridgeError: Error, LocalizedError, Sendable {
@@ -178,6 +183,8 @@ public final class WatchBridge: NSObject {
   public var onAcknowledged: ((AppSnapshot, AppSnapshot) async throws -> Void)?
   public var onNamespaceChanged: ((String) async throws -> Void)?
   public var onError: ((any Error) -> Void)?
+  /// 仅在配对通道就绪状态变化时通知，不覆盖每次记录的产品确认结果。
+  public var onStatus: ((String) -> Void)?
   public var activeNamespace: String { state.activeNamespace }
   public var pendingCount: Int { state.spaces[state.activeNamespace]?.outbox.count ?? 0 }
 
@@ -191,6 +198,7 @@ public final class WatchBridge: NSObject {
   private let namespaceDrain = WatchNamespaceDrain()
   private var namespaceRetryTask: Task<Void, Never>?
   private var namespaceRetryAttempt = 0
+  private var lastChannelStatus: String?
   #if canImport(WatchConnectivity) && (os(iOS) || os(watchOS)) && !targetEnvironment(macCatalyst)
   private var session: WCSession?
   #endif
@@ -207,6 +215,7 @@ public final class WatchBridge: NSObject {
     guard WCSession.isSupported() else { throw WatchBridgeError.unavailable }
     let session = WCSession.default
     self.session = session
+    lastChannelStatus = nil
     session.delegate = self
     session.activate()
     #else
@@ -228,7 +237,6 @@ public final class WatchBridge: NSObject {
     try persist(candidate)
     #if canImport(WatchConnectivity) && (os(iOS) || os(watchOS)) && !targetEnvironment(macCatalyst)
     cancelTransfersOutsideActiveNamespace()
-    publishNamespace()
     #endif
     retryPending()
   }
@@ -240,7 +248,7 @@ public final class WatchBridge: NSObject {
     var candidate = state
     candidate.spaces.removeValue(forKey: namespace)
     try persist(candidate)
-    #if canImport(WatchConnectivity) && (os(iOS) || os(watchOS)) && !targetEnvironment(macCatalyst)
+    #if canImport(WatchConnectivity) && (os(iOS) || os(watchOS)) && !targetEnvironment(macCatalyst) && !targetEnvironment(simulator)
     for transfer in session?.outstandingUserInfoTransfers ?? [] {
       guard let data = transfer.userInfo[Self.payloadKey] as? Data,
         let message = try? WatchWireMessage.decode(data), message.namespace == namespace else { continue }
@@ -273,29 +281,86 @@ public final class WatchBridge: NSObject {
       return
     }
     #endif
-    guard let session, session.activationState == .activated else { return }
+    guard let session, session.activationState == .activated else {
+      updateChannelStatus("正在建立配对设备通道，记录仍保存在本机。")
+      return
+    }
     #if os(iOS)
-    guard session.isPaired, session.isWatchAppInstalled else { return }
+    guard session.isPaired else {
+      updateChannelStatus("尚未配对 Apple Watch，记录仍保存在本机。")
+      return
+    }
+    guard session.isWatchAppInstalled else {
+      updateChannelStatus("配对手表尚未就绪，请确认 MyEnergy 已安装并打开。记录仍保存在本机。")
+      return
+    }
     #elseif os(watchOS)
-    guard session.isCompanionAppInstalled else { return }
+    guard session.isCompanionAppInstalled else {
+      updateChannelStatus("配对 iPhone 尚未就绪，请确认 MyEnergy 已安装并打开。记录仍保存在手表。")
+      return
+    }
     #endif
+    updateChannelStatus(session.isReachable
+      ? "配对设备前台通道已就绪，等待记录保存确认。"
+      : "配对设备暂不可达，未确认记录已保留，请稍后重试。")
+    #if os(iOS)
+    publishNamespace()
+    #endif
+    #if !targetEnvironment(simulator)
     let queued = Set(session.outstandingUserInfoTransfers.compactMap { transfer -> UUID? in
       guard let data = transfer.userInfo[Self.payloadKey] as? Data,
         let message = try? WatchWireMessage.decode(data) else { return nil }
       return message.eventID
     })
+    #endif
     // 一次只发送队首，保持同一设备快照的顺序；下一项由 ACK 驱动。
     guard let message = state.spaces[state.activeNamespace]?.outbox.first else { return }
     do {
       let data = try message.encoded()
+      #if !targetEnvironment(simulator)
       if !queued.contains(message.eventID) { session.transferUserInfo([Self.payloadKey: data]) }
+      #endif
       if session.isReachable {
-        session.sendMessageData(data, replyHandler: nil) { [weak self] error in
-          Task { @MainActor in self?.onError?(error) }
-        }
+        session.sendMessageData(data, replyHandler: { [weak self] reply in
+          Task { @MainActor in
+            guard let self else { return }
+            do { try await self.processReply(reply, for: message) }
+            catch { self.reportSendError(error, for: message) }
+          }
+        }, errorHandler: { [weak self] error in
+          Task { @MainActor in self?.reportSendError(error, for: message) }
+        })
       }
     } catch { onError?(error) }
     #endif
+  }
+
+  private func updateChannelStatus(_ message: String) {
+    guard lastChannelStatus != message else { return }
+    lastChannelStatus = message
+    onStatus?(message)
+  }
+
+  /// 多个前台重试可能共享事件 ID；成功确认后，旧请求的超时不再属于当前操作。
+  func isAwaitingAcknowledgement(for event: WatchWireMessage) -> Bool {
+    state.activeNamespace == event.namespace
+      && state.spaces[event.namespace]?.outbox.contains(where: { $0.eventID == event.eventID }) == true
+  }
+
+  func reportSendError(_ error: any Error, for event: WatchWireMessage) {
+    guard isAwaitingAcknowledgement(for: event) else { return }
+    onError?(error)
+  }
+
+  /// 前台已确认或账号已切换后，后台旧传输的失败不得改写当前结果。
+  func reportBackgroundTransferError(_ error: any Error, messageData: Data?) {
+    guard let messageData, let event = try? WatchWireMessage.decode(messageData),
+      event.namespace == state.activeNamespace else { return }
+    if event.kind == .snapshot {
+      reportSendError(error, for: event)
+    } else if state.spaces[event.namespace]?.receivedIDs.contains(event.eventID) == true {
+      onError?(error)
+    }
   }
 
   private func loadState() throws {
@@ -334,7 +399,7 @@ public final class WatchBridge: NSObject {
   }
 
   /// 与 WCSession 分离的传输处理入口，使持久化和 ACK 顺序能够在无配对设备时验证。
-  func processIncoming(_ data: Data) async throws {
+  func processIncoming(_ data: Data, inlineAcknowledgement: ((Data) throws -> Void)? = nil) async throws {
     try loadState()
     let message = try WatchWireMessage.decode(data)
     guard message.namespace == state.activeNamespace else { throw WatchBridgeError.namespaceMismatch }
@@ -357,7 +422,10 @@ public final class WatchBridge: NSObject {
       return
     }
     let space = state.spaces[message.namespace] ?? WatchNamespaceState()
-    if space.receivedIDs.contains(message.eventID) { try acknowledgeReceivedEvent(message); return }
+    if space.receivedIDs.contains(message.eventID) {
+      try acknowledgeReceivedEvent(message, inlineAcknowledgement: inlineAcknowledgement)
+      return
+    }
     guard !receiving.contains(message.eventID) else { return }
     guard space.receivedIDs.count < 20_000 else { throw WatchBridgeError.queueFull }
     guard let snapshot = message.snapshot, let base = message.baseSnapshot else { throw WatchBridgeError.invalidMessage }
@@ -372,10 +440,26 @@ public final class WatchBridge: NSObject {
     updated.receivedIDs.insert(message.eventID)
     candidate.spaces[message.namespace] = updated
     try persist(candidate)
-    try acknowledgeReceivedEvent(message)
+    try acknowledgeReceivedEvent(message, inlineAcknowledgement: inlineAcknowledgement)
   }
 
-  private func acknowledgeReceivedEvent(_ event: WatchWireMessage) throws {
+  /// 即时消息的 reply 必须确认同一事件；不能借一条回复提前确认其他待发送记录。
+  func processReply(_ data: Data, for event: WatchWireMessage) async throws {
+    let reply = try WatchWireMessage.decode(data)
+    guard event.kind == .snapshot, reply.kind == .acknowledgement,
+      reply.eventID == event.eventID, reply.namespace == event.namespace else {
+      throw WatchBridgeError.invalidMessage
+    }
+    try await processIncoming(data)
+  }
+
+  private func acknowledgeReceivedEvent(_ event: WatchWireMessage,
+    inlineAcknowledgement: ((Data) throws -> Void)?) throws {
+    if let inlineAcknowledgement {
+      let reply = WatchWireMessage(kind: .acknowledgement, eventID: event.eventID, namespace: event.namespace)
+      try inlineAcknowledgement(reply.encoded())
+      return
+    }
     #if canImport(WatchConnectivity) && (os(iOS) || os(watchOS)) && !targetEnvironment(macCatalyst)
     try sendAcknowledgement(for: event)
     #endif
@@ -391,25 +475,30 @@ public final class WatchBridge: NSObject {
     guard let session, session.activationState == .activated else { return }
     let message = WatchWireMessage(kind: .acknowledgement, eventID: event.eventID, namespace: event.namespace)
     let data = try message.encoded()
+    #if !targetEnvironment(simulator)
     session.transferUserInfo([Self.payloadKey: data])
+    #endif
     if session.isReachable {
       session.sendMessageData(data, replyHandler: nil) { [weak self] error in
-        Task { @MainActor in self?.onError?(error) }
+        Task { @MainActor in self?.reportBackgroundTransferError(error, messageData: data) }
       }
     }
   }
 
   private func cancelTransfersOutsideActiveNamespace() {
+    #if !targetEnvironment(simulator)
     for transfer in session?.outstandingUserInfoTransfers ?? [] {
       guard let data = transfer.userInfo[Self.payloadKey] as? Data,
         let message = try? WatchWireMessage.decode(data), message.namespace != state.activeNamespace else { continue }
       transfer.cancel()
     }
+    #endif
   }
 
   private func publishNamespace() {
     #if os(iOS)
-    guard let session, session.activationState == .activated else { return }
+    guard let session, session.activationState == .activated,
+      session.isPaired, session.isWatchAppInstalled else { return }
     do { try session.updateApplicationContext([Self.namespaceKey: state.activeNamespace]) }
     catch { onError?(error) }
     #endif
@@ -479,7 +568,6 @@ extension WatchBridge: WCSessionDelegate {
       if let error { self.onError?(error); return }
       if let namespace { await self.receiveNamespace(namespace) }
       self.cancelTransfersOutsideActiveNamespace()
-      self.publishNamespace()
       self.retryPending()
     }
   }
@@ -490,6 +578,16 @@ extension WatchBridge: WCSessionDelegate {
 
   public nonisolated func session(_ session: WCSession, didReceiveMessageData messageData: Data) {
     Task { @MainActor [weak self] in await self?.receive(messageData) }
+  }
+
+  public nonisolated func session(_ session: WCSession, didReceiveMessageData messageData: Data,
+    replyHandler: @escaping (Data) -> Void) {
+    let reply = WatchMessageReply(callback: replyHandler)
+    Task { @MainActor [weak self, reply] in
+      guard let self else { return }
+      do { try await self.processIncoming(messageData, inlineAcknowledgement: reply.callback) }
+      catch { self.onError?(error) }
+    }
   }
 
   public nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
@@ -506,7 +604,9 @@ extension WatchBridge: WCSessionDelegate {
     _ session: WCSession, didFinish userInfoTransfer: WCSessionUserInfoTransfer, error: (any Error)?
   ) {
     // 系统确认传输完成时仍保留 outbox；仅显式产品 ACK 才允许删除。
-    if let error { Task { @MainActor [weak self] in self?.onError?(error) } }
+    guard let error else { return }
+    let data = userInfoTransfer.userInfo["myenergy.watch.v1"] as? Data
+    Task { @MainActor [weak self] in self?.reportBackgroundTransferError(error, messageData: data) }
   }
 
   #if os(iOS)

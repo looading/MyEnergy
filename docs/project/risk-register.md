@@ -13,10 +13,10 @@
 | R05 | 时间漂移、时区变化造成打卡日期或趋势错误 | 高／高 | 调整系统时间、跨午夜、跨时区或夏令时变化后，记录归属不一致 | 在 G1 确认“发生时间、记录时间、当地日期”的含义；保留必要时间信息；用可控时钟验证边界；不以设备时间直接判断同步新旧 | Apple 架构 agent，产品 agent 参与 | 固定日键、显式时区与 DST 测试通过；旅行真机场景待验证 |
 | R06 | 健康或情绪数据进入政策不允许的云端路径 | 中／关键 | 个人健康信息进入应用创建的 iCloud／CloudKit 数据库或备份，或敏感内容进入日志 | Apple 5.1.3 禁令已确认；按敏感健康信息处理心情、精力和衍生摘要；逐字段审查持久化、备份及传输；仅在批准方案和授权边界内接入独立服务 | Apple 架构 agent，PM 跟踪 | 约束已落实为本地／独立密文服务；真机备份行为及生产审查待验证 |
 | R07 | 产品账号与 Apple 身份映射错误导致数据串用 | 中／关键 | 身份分组错误，或切换账号后仍展示／传输上一账号记录，旧确认作用于新空间 | 校验明确的账号 namespace；切账号停止健康共享并使在途结果失效；确认动作绑定原 storageURL，模型再次校验 expectedStorageURL；验证 App ID 分组、同步停止及删除效果 | Apple 架构 agent | 匿名配对、晚到结果和旧确认跨账号保护已回归，P2 复核关闭；真实 App ID 分组待配置 |
-| R08 | 同步延迟、断网或后台限制破坏互联体验 | 高／高 | 设备长期显示旧状态、恢复联网仍未收敛，或界面错误显示已同步 | 在 ADR 中规定重试、状态及新鲜度；G1 确认可测延迟阈值；说明后台限制；用真机验证中断后恢复 | Apple 架构 agent，UX agent 参与 | 开发双客户端通过；Watch 60 KiB 限制和后台送达待真机验收 |
+| R08 | 同步延迟、断网或后台限制破坏互联体验 | 高／高 | 设备长期显示旧状态、恢复联网仍未收敛，或界面错误显示已同步 | 在 ADR 中规定重试、状态及新鲜度；区分前台交互与后台通道，接收落盘后确认；用真机验证中断后恢复 | Apple 架构 agent，UX agent 参与 | W5 前台 ACK／就绪恢复／中文状态已实现并回归，review 问题复核关闭；修复版实际 ACK 恢复、Phone 主动发送状态和真机后台仍待验收 |
 | R09 | 恢复参考被理解为医疗判断 | 中／高 | 文案给出疾病、治疗或无依据的精确压力／恢复结论，用户难以判断其来源 | 产品定义限定为日常参考；说明数据来源与局限；算法及界面文案需评审；不默认加入疾病预测或治疗建议 | 产品 agent，UX agent 参与 | 自评与恢复分离已实现，真机体验待验收 |
 | R10 | 商标、名称或素材与参考产品发生冲突 | 中／高 | 名称检索发现冲突，或设计、图标和文案近似复制参考产品 | MyEnergy 先作为工作名；发布前核查候选名称与素材来源；独立设计界面、品牌和内容；必要时更名 | 产品 agent，Sponsor 决策 | 工作名，未完成检索 |
-| R11 | 四端范围超出可用测试资源 | 高／高 | 缺少设备／系统版本，某端仅有模拟器结果，或实现分工相互阻塞 | 固定系统与设备矩阵；区分通用编译、模拟器 UI 和真机证据；按本地增量再互联的顺序验证，缺平台证据时不宣称四端通过 | PM | iOS／watchOS 27.2 runtime、配对模拟器及两端安装均已落实；当前因 Mac 锁屏无法验收应用 UI，物理设备矩阵仍待后续落实 |
+| R11 | 四端范围超出可用测试资源 | 高／高 | 缺少设备／系统版本，某端仅有模拟器结果，或实现分工相互阻塞 | 固定系统与设备矩阵；区分通用编译、模拟器 UI 和真机证据；按本地增量再互联的顺序验证，缺平台证据时不宣称四端通过 | PM | runtime、配对模拟器与安装已落实，Watch 快记及 Phone 空态实际运行；Simulator 不支持 transferUserInfo，余下 UI 又因 Mac 锁屏暂停，物理设备矩阵待后续落实 |
 | R12 | 多 agent 同时修改接口或共享文件导致集成返工 | 中／中 | 数据模型变化未通知、修改覆盖或跨模块构建失败 | PM 分配文件与模块归属；共享契约由架构负责人维护；接口变化先沟通；集成验证串行执行并保留结果 | PM | 文件归属已执行，串行集成与独立 review 已完成本轮 |
 | R13 | 范围不断扩张，首版无法形成验收结论 | 中／高 | 增加 AI、订阅、社交或更多指标，但没有对应取舍与验收项 | 以获批 F／AC 为基线；新增范围记录影响并由 Sponsor 决策；优先交付可独立验收的增量 | PM，产品 agent 参与 | 首版基线已批准，后续新增范围仍走变更 |
 | R14 | 分发和商店审核要求在后期阻断发布 | 中／高 | 隐私说明、健康能力用途或构建元数据不符合目标渠道要求 | G1 明确首轮交付渠道；发布前核对官方要求与隐私申报；把内部安装通过和商店审核通过分别记录 | PM，Apple 架构 agent 参与 | 渠道待确认 |
@@ -36,7 +36,7 @@ G1 已批准。R11 的 iOS／watchOS 模拟器运行时现已落实，当前先�
 
 ## 本轮更新
 
-最新完整本地联调为 124 项 Swift（35 XCTest、89 Swift Testing）与 8 项 Node 服务测试通过，0 失败、0 跳过。review 确认的跨账号旧确认 P2 已复核关闭，当前未解决的确定 P1／P2 为 0。修复后 Watch／iOS／Mac 最终通用目标全部构建成功，专用配对模拟器 DeviceDebug 构建和两端应用安装通过；MyEnergy 尚未打开，UI 因 Mac 锁屏待验收。Watch 完整快照与因果基线合计 60 KiB，服务器密文正文也有大小上限；正式长周期使用前应改为增量同步并做容量验证。健康摘要必须单独明确授权，关闭及跨账号重置已做回归，真机传输仍待验收。
+W5 修复后的最新完整本地联调为 130 项 Swift（41 XCTest、89 Swift Testing）与 8 项 Node，0 失败、0 跳过；较此前 124 项基线新增 6 项 XCTest。Watch／iOS／Mac generic 与 DeviceDebug 双端构建安装均通过。前台 ACK、就绪恢复和中文状态已实现；旧确认及 W5 review P2 均已修复并复核关闭，当前未解决确认 P1／P2 为 0。实际 UI 仍只有修复前 Watch 本机保存 1 条、Phone 0 条及主屏图标证据；修复版已重装，实际 ACK 恢复尚待重开 Watch 验收，不能用回归通过关闭实际配对风险。Watch 完整快照与因果基线合计 60 KiB，长周期容量及真机传输仍待验证。
 
 ## 当前本地范围
 
@@ -60,4 +60,12 @@ Watch 本机只在用户点击时请求健康读取；授权请求结束不等�
 
 匿名与账号配对以明确 namespace 区分，文件路径不同本身不能证明存在账号。最新摘要须单独同意，经配对 iPhone 进入同账号服务，不包含原始健康历史。独立 review 确认的 P2“旧共享确认在切账号后作用于新空间”已绑定原 storageURL，并以 expectedStorageURL 模型校验阻止；AsyncStream 控制实际执行顺序的回归通过，复核已关闭。真实配对设备上的确认、断连及删除传播仍待验证。
 
-官方 iOS 27.2／watchOS 27.2 runtime 已安装，专用 iPhone／Watch 模拟器已启动配对。`run-watch.sh --prepare-only` 已完成本地 ad-hoc DeviceDebug 构建和两端安装；从实际 arm64 可执行文件的内嵌 entitlement 核对两端 HealthKit 为 true，无需更改签名。Xcode 27.2 使用 Device Hub 前端，脚本已优先适配并激活自身 pair。CUA 只观察到 Watch 表盘及配对指示，打开 MyEnergy 前 Mac 锁屏；已等待用户手动解锁，全部应用 UI 用例保持未验收。该阻塞来自锁屏，不能再归因于 runtime。不据构建安装关闭 R02／R03／R11。模拟器无真实传感器和日常健康历史，也不能证明后台送达或真机功耗。此次不改动用户既有 Mac 数据，不增加独立 Watch 云登录、后台采样、widget 或健康评分。
+官方 iOS 27.2／watchOS 27.2 runtime 已安装，专用 iPhone／Watch 模拟器已启动配对。`run-watch.sh --prepare-only` 已完成本地 ad-hoc DeviceDebug 构建和两端安装；从实际 arm64 可执行文件核对两端 HealthKit entitlement 为 true，无需更改签名。用户解锁后，CUA 在 Device Hub 的专用 42 mm Watch 实际完成快记并显示“手表本机已保存”，返回首页为 1 条虚构模拟器记录；Phone 主屏图标与 0 条应用空态已观察。健康授权、睡眠、习惯与主题选项仍未验收，Mac 再次锁屏，等待用户再次手动解锁。不据这部分 UI 关闭 R02／R03／R11。此次不改动既有 Mac 数据，也不增加独立 Watch 云登录、后台采样、widget 或健康评分。
+
+## W5 工程修复及实际恢复风险
+
+修复前两端应用确已安装、pair connected，Phone WCSession 为 paired YES、appInstalled NO、reachable NO，Watch 为 companionInstalled YES、reachable YES。队首空 snapshot 已在 Phone receivedIDs 并落盘，失败的是 Phone 单独返回的 transferUserInfo ACK；FIFO 因未确认队首而挡住后续 1 条记录。不得把该证据写成完全未接收、namespace 拒收，也不将当时 isWatchAppInstalled 观测泛化为 Simulator 恒为 false。修复后 Phone → Watch 主动发送所需的安装／可达状态尚待核实。
+
+Apple 官方明确 [Simulator 不支持 transferUserInfo(_:)](https://developer.apple.com/documentation/watchconnectivity/wcsession/transferuserinfo(_:).md)。已在前台 sendMessageData.replyHandler 中，于应用快照及 receivedIDs 落盘后直接返回既有 ACK，并补就绪后的重试与中文状态。Simulator 不调用 transferUserInfo，生产后台保留，安装／账号 guard 未绕过；wire v2 与既有队列 schema 保持不变。
+
+namespace 发布真实错误的显示顺序、生产后台迟到错误覆盖状态两项 review P2 已修复，复核全部关闭。130 项 Swift／8 项 Node 及 SDK／generic 构建安装证明工程验证通过；Device Hub 当前系统配对操作占用验收窗口，修复版虽已重装，尚未重开 Watch 证明队列与 ACK 实际恢复。这项实际验收和 Phone 主动发送状态继续开放，真实后台送达仍需物理设备。健康、睡眠、习惯和主题选项等 UI 未测，不据单测关闭平台风险。

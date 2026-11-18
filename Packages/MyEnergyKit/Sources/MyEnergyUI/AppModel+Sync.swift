@@ -34,7 +34,13 @@ public final class AppDeviceCoordinator: ObservableObject {
     scheduleAccountSync()
     #endif
     #if os(iOS) || os(watchOS)
-    bridge.onError = { [weak self] error in self?.watchMessage = error.localizedDescription }
+    bridge.onError = { [weak self] error in
+      let failure = error as NSError
+      self?.watchMessage = failure.domain == "WCErrorDomain"
+        ? "配对传输尚未完成。请在手机和手表打开 MyEnergy 后重试；本机记录已保留。（错误码 \(failure.code)）"
+        : error.localizedDescription
+    }
+    bridge.onStatus = { [weak self] message in self?.watchMessage = message }
     bridge.onNamespaceChanged = { [weak self] namespace in
       guard let self else { throw WatchBridgeError.receiverUnavailable }
       #if os(watchOS)

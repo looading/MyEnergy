@@ -2,7 +2,9 @@
 
 面向 iPhone、iPad、Apple Watch 和 Mac 的原生精力记录与健康习惯应用。
 
-当前交付为四端本地 MVP、Apple 平台适配源码和开发环境的加密同步联调。Mac 已实际运行验证；本轮补齐 Watch 本机健康入口、睡眠详情和设备设置，完整本地回归及修复后的 Watch／iOS／Mac 最终构建均通过。专用配对模拟器已启动、两端应用已安装；MyEnergy 原生 UI 尚未验收，当前因 Mac 锁屏等待用户手动解锁。用户已选择先完成本地版本与开发账号联调。真实 Apple 登录、健康授权、配对真机传输及正式发布放到后续阶段，不阻塞本轮本地验收。
+当前交付为四端本地 MVP、Apple 平台适配源码和开发环境的加密同步联调。Watch 本机健康、睡眠详情和设备设置已补齐；配对前台 ACK、就绪恢复及中文状态也已实现。最新完整回归通过 130 项 Swift 和 8 项 Node，Watch／iOS／Mac 通用目标及 DeviceDebug 模拟器双端构建安装均通过，review 确认的问题全部修复并复核关闭。
+
+实际 UI 验收仍待继续。旧版专用 42 mm Watch 已完成快记本机保存并返回 1 条虚构记录，iPhone 已打开 0 条空态，主屏图标可见；该次配对记录传输触发 W5。修复版已重装，尚未重新打开应用验证 ACK 和队列恢复，不能用单测结果代替实际同步通过。Mac 第二次锁屏后仍在等待用户确认已再次解锁。真实 Apple 登录、健康授权、配对真机传输及正式发布继续按后续阶段处理。
 
 ## 立即体验
 
@@ -49,7 +51,9 @@
 
 脚本复用并激活专用配对设备，使用带 HealthKit entitlement 的本地 ad-hoc `DeviceDebug` 模拟器构建，安装 iPhone 和 Watch 应用；默认打开 Device Hub 并启动两端，启动前结束已有应用进程以使用最新构建。Xcode 27.2 的模拟器前端名为 Device Hub，可从 Xcode 的 Open Developer Tool 菜单打开；脚本优先使用它，旧环境回退到 Simulator。
 
-本轮 `--prepare-only` 已成功完成两端构建与安装，并从实际可执行文件核对 HealthKit entitlement。已观察到 Device Hub 的专用 Watch 表盘和配对指示；随后 Mac 锁屏，尚未打开 MyEnergy，全部应用 UI 用例仍未验收。模拟器数据与已有 Mac 本机记录分开，详细结果见[验证报告](docs/verification/report.md)。
+本轮 `--prepare-only` 已成功完成两端构建与安装，并从实际可执行文件核对 HealthKit entitlement。用户解锁后，已在 Device Hub 的专用 Watch 实际打开首页和快记，保存显示“手表本机已保存”，返回首页可见 1 条虚构的模拟器验收记录。iPhone 主屏已显示蓝绿 e 形图案与金星图标，MyEnergy 首页为 0 条记录的可运行空态。
+
+旧版实测中，这条 Watch 记录未到达 iPhone：队首较早的空快照已被手机接收并落盘，但独立 ACK 返回失败，FIFO 因而挡住后续记录。W5 已补齐前台直接回复 ACK、就绪后重试及中文状态，回归、SDK 构建与重装通过；修复版尚未重新打开应用，实际 ACK 恢复仍待验收。Apple 明确说明 `transferUserInfo(_:)` 不受 Simulator 支持，模拟器前台联通与真机后台送达须分别验证，见[验证报告](docs/verification/report.md)。健康授权、睡眠、习惯及主题选项尚未操作；Mac 第二次锁屏后仍待再次解锁答复。模拟器数据与已有 Mac 本机记录分开。
 
 在手表“身体参考”中点击连接，才会请求健康只读授权。请求完成不代表所有读权限获准，空结果也不能判定拒绝。连接仅在本次进程内有效；进入前台后，已连接状态按最近尝试间隔至少五分钟重读，手动重试可立即执行。失败保留上次结果和时间；停止读取会清除本机临时展示，示例不读取或共享健康。
 
@@ -99,7 +103,7 @@ MYENERGY_TEST_SYNC_URL=http://127.0.0.1:8787 ./scripts/test.sh
 
 直接运行通用测试且不配置服务地址时，三项双客户端测试及八项账号生命周期测试会明确跳过；本轮验收使用 test-local.sh，相关用例全部实际执行。iPhone 和 iPad 共用 iOS target，device family 为 1、2；构建串行执行。
 
-本轮 Watch 补齐后的完整 `./scripts/test-local.sh` 通过：124 项 Swift（35 XCTest、89 Swift Testing）和 8 项 Node 服务测试，0 失败、0 跳过。新增回归覆盖健康生命周期、前台节流、晚到结果隔离、匿名共享保护，以及账号切换后旧确认的失效。跨账号旧确认 P2 已修复并经复核关闭，当前未解决的确定 P1／P2 为 0。修复后 `MyEnergyWatch`、`MyEnergyiOS`（含 Watch）与 `MyEnergyMac` 最终通用目标构建均为 `BUILD SUCCEEDED`；配对模拟器 DeviceDebug 构建和两端安装也已通过。应用 UI 因 Mac 锁屏尚未验收。
+W5 修复后的完整 `./scripts/test-local.sh` 通过 130 项 Swift（41 XCTest、89 Swift Testing）和 8 项 Node 服务测试，0 失败、0 跳过，较此前 124 项 Swift 增加 6 项 XCTest。前台 ACK、就绪恢复及状态回归已完成；namespace 发布真实错误的显示顺序、生产后台迟到错误覆盖状态这两项 review P2 均已修复并复核关闭，当前未解决的确认 P1／P2 为 0。修复版 `MyEnergyWatch`、`MyEnergyiOS`（含 Watch）与 `MyEnergyMac` 通用目标均 `BUILD SUCCEEDED`，DeviceDebug 双端 SDK 构建与安装也通过。wire v2 与既有队列 schema 保持不变；Simulator 不调用 `transferUserInfo`，生产后台及安装／账号 guard 保留。实际双端 ACK 恢复仍待解锁后复验。
 
 二维主题阶段的 MyEnergyUI、Mac 与 iPhone／iPad 构建和 Mac 主题交互证据继续保留。Simulator runtime 当前已可用，通用目标编译仍不能替代模拟器 UI 或真机运行；系统辅助功能与各平台边界见[验证报告](docs/verification/report.md)。
 

@@ -7,7 +7,7 @@
 | 里程碑 | 状态 | 证据与缺口 |
 | --- | --- | --- |
 | M0 设计确认 | 已通过 | 用户批准方案 A、首版范围及分阶段交付 |
-| M1 本地可运行 | 本地实现、回归、最终构建与模拟器安装通过，应用 UI 及用户验收待进行 | 最新 124 项 Swift、8 项服务测试，0 失败、0 跳过；P2 复核关闭，未解决的确定 P1／P2 为 0；修复后 Watch／iOS／Mac 最终构建全部通过。专用配对模拟器已启动，两端应用已安装；因 Mac 锁屏，MyEnergy 尚未打开，应用 UI 全部待验收 |
+| M1 本地可运行 | 工程实现、回归、构建安装通过，修复版实际配对与余下 UI 待验收 | 最新 130 项 Swift（41 XCTest＋89 Swift Testing）、8 项 Node，0 失败、0 跳过；review P2 全部复核关闭，未解决确认 P1／P2 为 0；Watch／iOS／Mac 及 DeviceDebug 双端构建安装通过。旧版快记本机保存、Phone 空态和图标已观察；W5 修复版已重装，实际 ACK 恢复尚未复验，等待第二次解锁答复 |
 | M2 平台接入 | 源码及编译已交付，真机验收依赖外部资源 | 健康只读、恢复计算、睡眠去重、Watch 队列及因果同步；未读真健康数据，未做配对真机传输 |
 | M3 四端账号 | 开发环境双客户端联调通过，真实四端未验收 | 服务、Apple JWT 验证、客户端加密、恢复密钥及冲突选择已实现；本机开发账号生命周期及双客户端通过；真实团队、生产服务和真机验证已由用户选择暂缓 |
 | M4 发布准备 | 未完成 | 生产密钥生命周期、隐私和安全审查、发布配置、真机功耗及用户接受仍需完成 |
@@ -36,9 +36,9 @@
 
 Xcode 27.2、Swift 6.4.2、Node.js 26.3.1、XcodeGen 2.47.0，所需 SDK 27.2 已安装。iOS 27.2 与 watchOS 27.2 Simulator runtime 已通过 Xcode 官方工具安装，专用 iPhone 18 Pro 与 Apple Watch Series 12（42 mm）模拟器已创建配对；此前无 runtime 的环境限制已解除。用户选择先完成本地与开发账号联调，本轮不要求真实团队、真机签名、App ID 分组或物理设备；这些事项已移至后续阶段。
 
-本轮本地交付已具备：实际 Mac 开发登录与密钥创建、系统钥匙串跨进程回归、124 项 Swift 与 8 项服务测试，以及一键隔离联调脚本。review 修复后的 Watch／iOS／Mac 最终通用目标构建均通过；`run-watch.sh --prepare-only` 已成功启动并配对专用模拟器，完成 DeviceDebug ad-hoc 构建和两端应用安装。实际 arm64 主可执行文件中的 HealthKit entitlement 已核对为 true。已有 Mac 数据本轮不作改动。后续仍按用户安排进入真机、Watch 增量传输及生产密钥／发布事项。
+已有本地交付证据包括实际 Mac 开发登录与密钥创建、系统钥匙串跨进程回归，以及一键隔离联调脚本。W5 修复后的最新完整回归为 130 项 Swift 与 8 项 Node，0 失败、0 跳过；Watch／iOS（含 Watch）／Mac 通用目标和 DeviceDebug 双端 SDK 构建安装均通过。前台 ACK、就绪恢复和中文状态已实现，2 条 review P2 已修复并全部复核关闭。修复版已重装到专用 pair，尚未重新打开应用验收实际 ACK 恢复。此前实际 arm64 可执行文件 HealthKit entitlement 为 true 的证据保留。已有 Mac 数据本轮不作改动。
 
-Xcode 27.2 的模拟器前端为 Device Hub，可在 Xcode → Open Developer Tool 打开；脚本优先打开 Device Hub、回退 Simulator，激活自身专用 pair，并在启动应用前结束已有进程以使用最新构建。CUA 已观察专用 Watch 表盘与配对指示，尚未打开 MyEnergy 时 Mac 锁屏。已请用户手动解锁，当前全部应用 UI 用例仍待验收；阻塞来自锁屏，runtime 和安装条件已满足。
+Xcode 27.2 的模拟器前端为 Device Hub，可在 Xcode → Open Developer Tool 打开；脚本优先打开 Device Hub、回退 Simulator，激活自身专用 pair，并在启动应用前结束已有进程以使用最新构建。用户已解锁一次，CUA 在专用 42 mm Watch 打开 MyEnergy 首页与快记，保存成功提示“手表本机已保存”，返回首页显示 1 条虚构的专用模拟器记录。iPhone 主屏图标与 0 条记录的应用空态也已实际观察。健康授权、睡眠、习惯与主题选项尚未验收；Mac 再次自动锁屏，已再次请求用户手动解锁，暂不继续 UI。
 
 ## 本地收尾记录
 
@@ -72,10 +72,24 @@ MyEnergyUI 包构建、完整 `./scripts/test-local.sh` 及最新 Mac／iOS 通�
 
 已连接状态进入前台后，按最近读取尝试间隔至少五分钟刷新；失败尝试同样计入节流，手动刷新可立即重试。operationID 与 generation 隔离停止、重连、切空间和示例期间的晚到结果；失败保留旧报告。共享依赖已确认的账号 namespace，匿名空间禁止共享；开启须单独确认字段及经配对 iPhone 到同账号服务的路径，停止更新并移除此手表摘要也有明确操作。
 
-review 确认一项 P2：旧共享确认可能在账号切换后作用于新空间。已在确认时捕获原 storageURL，并由模型的 expectedStorageURL guard 拒绝失效动作；补充 AsyncStream 控制实际异步顺序的回归。P2 复核已关闭，当前未解决的确定 P1／P2 为 0。本轮最新完整测试通过 35 项 XCTest、89 项 Swift Testing（合计 124 项 Swift）与 8 项 Node 测试，0 失败、0 跳过；相较主题阶段增加 18 项 Swift 用例。修复后最终三目标均 `BUILD SUCCEEDED`，专用模拟器两端构建安装通过；应用 UI 因锁屏未验收，不能用表盘和配对指示替代 MyEnergy 功能通过。
+review 确认一项 P2：旧共享确认可能在账号切换后作用于新空间。已在确认时捕获原 storageURL，并由模型的 expectedStorageURL guard 拒绝失效动作；补充 AsyncStream 控制实际异步顺序的回归。该项 P2 复核关闭，该轮 review 未留下确定 P1／P2。相应完整测试通过 35 项 XCTest、89 项 Swift Testing（合计 124 项 Swift）与 8 项 Node 测试，0 失败、0 跳过；三目标均 `BUILD SUCCEEDED`，专用模拟器两端构建安装通过。随后实际配对验收发现 W5，旧结果仅作为修复前基线，不表示本轮已收尾。
+
+## W5 配对前台确认修复与待续验收
+
+修复前实测中，Watch 的虚构验收记录未到达 Phone。两端应用确已安装，专用 pair 已连接；当时 Phone 的 WCSession 为 paired YES、appInstalled NO、reachable NO，Watch 为 companionInstalled YES、reachable YES。这组状态仅描述该次模拟器观测，不把 isWatchAppInstalled 概括为模拟器恒为 false；修复后的 Phone → Watch 主动发送状态仍待核实。
+
+队首较早的空 snapshot 已进入 Phone 的 receivedIDs 并落盘；Phone 单独调用 transferUserInfo 返回 ACK 失败，FIFO 因此未放行后续 1 条记录。这不是完全未接收或 namespace 拒收。Apple 文档明确 Simulator 不支持该 API，详见[验证报告](../verification/report.md)。
+
+platform agent 已实现前台 sendMessageData.replyHandler 在应用快照与 receivedIDs 落盘后直接返回既有 ACK、namespace／安装就绪后的重试及中文状态。Simulator 不调用 transferUserInfo，生产后台保留，安装与账号 guard 均未绕过；wire v2 与既有队列 schema 保持不变。
+
+review 发现的 2 条 P2——namespace 发布真实错误的显示顺序、生产后台迟到错误覆盖状态——均已修复，复核全部关闭，当前未解决确认 P1／P2 为 0。最新完整 `test-local.sh` 通过 130 项 Swift（41 XCTest＋89 Swift Testing）及 8 项 Node，0 失败、0 跳过，较 124 项基线新增 6 项 XCTest；日志为 `watch-foreground-tests.log`。DeviceDebug 双端 SDK 构建安装及三个 generic 目标均通过，日志详见验证报告。
+
+工程结果不能替代实际配对恢复。已知 UI 仍为修复前 Watch 本机 1 条、Phone 0 条及已显示的图标；修复版重装后尚未重开或实际验收 ACK、队列和记录恢复。Phone → Watch 主动发送的安装／可达状态仍待核实。Mac 第二次锁屏后仍等待用户答复“已再次解锁”，暂不继续 UI；健康、睡眠、习惯等其余用例及真实后台传输边界不变。
 
 真实健康权限、传感器样本、后台配对传输及真机功耗仍未验证。模拟器和注入客户端的证据不能替代真机结果，也未改动用户既有 Mac 数据。
 
 ## 应用图标
 
-用户随后要求提供图标，已生成并保存 1024 × 1024 无透明 PNG 主图，接入 iOS／iPadOS、macOS 和 watchOS AppIcon。三端图标资源编译及专用模拟器两端重装通过；系统入口的实际显示继续等待 Mac 解锁后的界面验收。[图标说明](../design/app-icon.md)记录主图、各端尺寸及完整提示词。
+最新验收窗口已恢复可用，修复版 iPhone 已重开；Watch 尚未重开。Device Hub 随后出现系统配对提示并持续切换设备，已询问下一步使用专用模拟器还是真机，实际 ACK 恢复及余下界面项目仍待继续。
+
+用户随后要求提供图标，已生成并保存 1024 × 1024 无透明 PNG 主图，接入 iOS／iPadOS、macOS 和 watchOS AppIcon。三端图标资源编译及专用模拟器两端重装通过；专用 iPhone 主屏已实际显示蓝绿 e 形图案和金星图标，其他系统入口继续待验收。[图标说明](../design/app-icon.md)记录主图、各端尺寸及完整提示词。
