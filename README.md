@@ -8,7 +8,7 @@
 
 ## 立即体验
 
-需要 Xcode、Swift 6、XcodeGen 2.47 或兼容版本。最低系统为 macOS 14、iOS／iPadOS 17、watchOS 10。
+需要 Xcode、Swift 6、XcodeGen 2.47 或兼容版本。最低系统为 macOS 14、iOS／iPadOS 17、watchOS 10。从仓库根目录执行以下命令。
 
 ```sh
 ./scripts/run-mac.sh
@@ -77,6 +77,32 @@ Watch 已实际进入身体参考页，未连接说明和连接按钮可见。�
 
 生产部署、TLS、密钥轮换／恢复审查、设备撤销与远端清除须在 M3／M4 继续验收。
 
+## 用 Docker 启动同步服务
+
+有 Docker Engine 和 Compose v2 即可启动。从仓库根目录执行以下命令。
+
+```sh
+docker compose -f server/compose.yaml up -d --build
+curl --retry 5 --retry-connrefused -fsS http://127.0.0.1:8787/healthz
+```
+
+看到 `"status":"ok"` 表示服务已启动。宿主机端口默认绑定 `127.0.0.1:8787`。容器关闭开发账号入口，开发账号联调可用 `./scripts/run-server.sh`。
+
+```sh
+docker compose -f server/compose.yaml logs -f sync
+docker compose -f server/compose.yaml down
+```
+
+容器的 SQLite 保存在 Compose 的 `sync-data` 数据卷中，与本机脚本使用的数据库分开。重建容器或执行 `down` 后，使用同一 Compose 项目启动即可继续读取原数据。`down -v` 会连同数据库一起删除数据卷。
+
+Apple 登录需要配置 `MYENERGY_APPLE_AUDIENCES`。把 `server/.env.example` 复制为 `server/.env`，填入 Apple 团队中配置的应用标识，多个值用英文逗号分隔。`MYENERGY_BIND_ADDRESS` 和 `MYENERGY_PORT` 分别指定宿主机的绑定地址和端口。容器内健康检查始终使用 `8787`，手动执行 `curl` 时使用宿主机端口。保存后，从仓库根目录用该文件启动服务。[环境变量示例](server/.env.example)
+
+```sh
+docker compose --env-file server/.env -f server/compose.yaml up -d --build
+```
+
+其他设备通过 HTTPS 接入。可在同一宿主机上设置 HTTPS 反向代理，转发到宿主机发布地址，默认是 `127.0.0.1:8787`。在应用“我的 → 设备与同步”中填入代理的 HTTPS 地址。
+
 ## 一键本地联调验收
 
 ```sh
@@ -119,7 +145,7 @@ HealthKit 需要支持设备及授权；空结果不能证明拒绝授权。Watc
 
 ## 工程与管理
 
-`Apps/` 是原生入口；`Packages/MyEnergyKit/` 是 Core／Platform／UI；`server/` 是身份与密文服务；`Configuration/` 和 `scripts/` 支持复现构建。独立 Git 分支为 `codex/myenergy-mvp`，尚未配置远程仓库。
+`Apps/` 是原生入口；`Packages/MyEnergyKit/` 是 Core／Platform／UI；`server/` 是身份与密文服务；`Configuration/` 和 `scripts/` 支持复现构建。
 
 - [当前状态](docs/project/status.md)
 - [验证报告](docs/verification/report.md)

@@ -1,0 +1,18 @@
+name: myenergy-sync
+
+services:
+  sync:
+    build: .
+    restart: unless-stopped
+    environment:
+      MYENERGY_ALLOW_DEV_AUTH: "0"
+      MYENERGY_APPLE_AUDIENCES: "${MYENERGY_APPLE_AUDIENCES:-}"
+    ports:
+      - target: 8787
+        published: "${MYENERGY_PORT:-8787}"
+        host_ip: "${MYENERGY_BIND_ADDRESS:-127.0.0.1}"
+    volumes:
+      - sync-data:/var/lib/myenergy
+
+volumes:
+  sync-data:

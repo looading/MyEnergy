@@ -156,3 +156,17 @@ review 另确认两条 P2：namespace 发布真实错误的显示顺序，以及
 第三次锁屏发生在 Watch 身体页点击连接之前，未发起健康授权或查询。最新 CUA 仍确认锁屏，第三次解锁请求待用户答复，暂不再开展 UI；用户回复后再继续健康、睡眠、主题和完整示例等验收。前台联通通过不扩展为真实健康、真机后台或发布通过。
 
 操作状态备注：Device Hub 的临时 ViewFilter 目前为 Simulators，因锁屏尚未恢复原 All Devices，后续解锁后需还原。这是开发工具的显示筛选，不是应用设置更改或真机能力验证。
+
+## 服务端 Docker 部署验证
+
+2026-11-20 在 macOS 上通过 Docker Desktop 的 Linux ARM64 容器验证，Engine 20.10.17、Compose 2.7.0、镜像内 Node.js 24.22.3。两次验收分别使用临时 Compose 项目，完成后清理各自的容器和数据卷。
+
+| 检查 | 结果 |
+| --- | --- |
+| 默认启动 | 在仓库根目录构建并启动容器，实际发布到 `127.0.0.1:8787`，请求 `/healthz` 返回 200、`status: ok` 和 `developmentAuth: false` |
+| 自定义端口和新卷 | 使用临时宿主机端口和示例 audience，容器以 UID 1000 运行、健康状态为 `healthy`。新数据卷成功写入 SQLite，镜像内应用目录无 `.env` 或本机数据目录 |
+| 开发入口隔离 | 调用端设置 `MYENERGY_ALLOW_DEV_AUTH=1`，Compose 容器仍关闭开发认证，`POST /v1/auth/development` 返回 404 |
+| 重建数据库保留 | `POST /v1/auth/challenge` 写入一条测试挑战，`down` 后保留命名卷并启动不同容器。已存在的挑战进入身份校验并返回 `invalid_identity`，不存在的挑战返回 `invalid_challenge`。两者的 HTTP 状态均为 401 |
+| 服务端回归 | 运行 `node --test server/test/*.test.mjs`，8 项通过，0 失败、0 跳过 |
+
+首轮持久化验收脚本误将不存在的挑战预期为 HTTP 400。按现有接口更正预期后，从新数据卷重新执行并通过。容器日志见 `build/docker-smoke-20261120-final.log`。本次验收使用虚构的测试输入，真实 Apple 登录、远程 HTTPS、生产备份恢复及其他架构未运行。原生应用构建和设备测试沿用前述记录。

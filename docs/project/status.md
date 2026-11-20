@@ -28,7 +28,7 @@
 
 ## 已执行决策
 
-独立目录与 Git 仓库，分支 codex/myenergy-mvp，无远程。SwiftUI 原生 iOS（兼容 iPad）、macOS、watchOS，最低 17／14／10。精力自评和心情独立，身体参考不自动分类情绪。个人健康信息不进入自建 CloudKit，原始 HealthReport／样本历史留设备；用户明确同意后，选定当前摘要通过账号密文同步。
+独立 Git 仓库，采用原生 SwiftUI，最低支持 iOS／iPadOS 17、macOS 14、watchOS 10。精力自评和心情独立，身体参考不自动分类情绪。个人健康信息不进入自建 CloudKit，原始 HealthReport／样本历史留设备；用户明确同意后，选定当前摘要通过账号密文同步。
 
 独立 Node／SQLite 服务保存客户端密文，身份与密钥分开。Debug 用于无 Team 通用目标检查；专用模拟器 DeviceDebug 采用本地 ad-hoc 签名携带 HealthKit entitlement，真机 DeviceDebug／Release 仍需实际团队。普通实现选择和批准范围内修复自主推进，付费、正式部署和上架未获授权。
 
@@ -99,3 +99,13 @@ review 发现的 2 条 P2——namespace 发布真实错误的显示顺序、生
 先前 Device Hub 的系统配对提示未作为应用故障或同步通过结论；后续按原范围继续专用模拟器，双向前台同步与重启保留已实测。
 
 用户随后要求提供图标，已生成并保存 1024 × 1024 无透明 PNG 主图，接入 iOS／iPadOS、macOS 和 watchOS AppIcon。三端资源编译及专用模拟器重装通过，专用 iPhone 主屏和 Watch 启动器已实际看到品牌图标，通知与设置等其他入口继续待验收。[图标说明](../design/app-icon.md)记录主图、各端尺寸及完整提示词。
+
+## 服务端 Docker 部署
+
+2026-11-20，按用户要求增加同步服务的 Docker 快速部署入口，归入 M3。运行依赖为 Docker Engine 和 Compose，容器自带 Node.js 24，SQLite 使用独立数据卷。实际演练在本机隔离项目完成。目标环境的 HTTPS、真实 Apple 登录和备份恢复仍待验收。[启动说明](../../README.md#用-docker-启动同步服务) · [验证报告](../verification/report.md#服务端-docker-部署验证) · [风险 R16](risk-register.md)
+
+| 工作包 | 负责人 | 输入与依赖 | 产出与实际状态 | 验证与余项 |
+| --- | --- | --- | --- | --- |
+| D1 容器部署 | root | 现有 Node.js 和 SQLite 服务 | Dockerfile、Compose 和构建上下文白名单，已交付 | 新卷首次启动、非 root、`/healthz`、宿主机端口映射、开发入口关闭及重建后读回均通过 |
+| D2 启停与配置说明 | 文档 agent | D1 的端口、数据卷和认证约定 | README 与环境变量示例，已交付 | 默认命令实跑，示例配置可解析；远程 HTTPS 需要目标环境 |
+| D3 集成验收 | root、独立复核 agent | D1、D2、本机 Docker | 聚焦回归、独立复核及验收记录，已完成 | 8 项服务测试通过；真实 Apple 身份依赖开发者团队和 App ID 配置，备份恢复依赖目标环境 |
