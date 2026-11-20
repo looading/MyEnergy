@@ -4,6 +4,8 @@
 
 MyEnergy 是独立的 Apple 原生应用。改动限于本仓库，构建和运行使用本项目的配置与脚本。
 
+提交到公开仓库前，检查文件内容和 Git 提交身份。使用仓库相对路径和个人 GitHub 提交邮箱，避免提交公司内部项目名、链接、环境配置或公司邮箱。
+
 用户明确要求四类设备、同账号互联、多 agent 和 PMP 流程。具体功能与技术建议的批准状态见 `docs/project/status.md` 和 `docs/design/mvp-proposal.md`；Proposed 不等于已批准。
 
 ## 项目管理
