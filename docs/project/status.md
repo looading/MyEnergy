@@ -109,3 +109,13 @@ review 发现的 2 条 P2——namespace 发布真实错误的显示顺序、生
 | D1 容器部署 | root | 现有 Node.js 和 SQLite 服务 | Dockerfile、Compose 和构建上下文白名单，已交付 | 新卷首次启动、非 root、`/healthz`、宿主机端口映射、开发入口关闭及重建后读回均通过 |
 | D2 启停与配置说明 | 文档 agent | D1 的端口、数据卷和认证约定 | README 与环境变量示例，已交付 | 默认命令实跑，示例配置可解析；远程 HTTPS 需要目标环境 |
 | D3 集成验收 | root、独立复核 agent | D1、D2、本机 Docker | 聚焦回归、独立复核及验收记录，已完成 | 8 项服务测试通过；真实 Apple 身份依赖开发者团队和 App ID 配置，备份恢复依赖目标环境 |
+
+## 三平台 GitHub Actions 打包
+
+2026-11-20 补充 M4 的构建流程。GitHub Actions 用 Xcode 27.2 分别构建 macOS、iPhone／iPad、Apple Watch 的 Release 应用，并上传 ZIP。macOS 构建覆盖 arm64 和 x86_64，iPhone／iPad 构建内嵌配对的 Watch 应用。流程无需 Apple Team 或签名密钥。真机签名、安装和 macOS 分发公证仍按 M4 验收。[构建与下载说明](../../README.md#github-actions-构建产物)
+
+| 工作包 | 负责人 | 输入与依赖 | 产出与实际状态 | 验证与余项 |
+| --- | --- | --- | --- | --- |
+| A1 打包脚本 | root | 仓库内 Xcode 工程、Xcode 27.2 SDK | 三个平台的 Release ZIP | 本机 Xcode 27.2 三包通过。已核对 macOS 双架构、iPhone 内嵌 Watch 和独立 Watch 包 |
+| A2 GitHub 工作流 | 工作流 agent | A1、GitHub 托管运行器 | 三个平台的构建任务和产物上传 | GitHub Actions 各次运行独立记录，产物保留 7 天 |
+| A3 构建说明 | 文档 agent | A1 与 A2 的入口、产物和签名约定 | README 和本记录已更新 | 命令、产物名称和保留期已对照脚本与工作流核对 |

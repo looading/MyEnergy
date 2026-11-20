@@ -135,6 +135,28 @@ MYENERGY_TEST_SYNC_URL=http://127.0.0.1:8787 ./scripts/test.sh
 
 二维主题阶段的 MyEnergyUI、Mac 与 iPhone／iPad 构建和 Mac 主题交互证据继续保留。Simulator runtime 当前已可用，通用目标编译仍不能替代模拟器 UI 或真机运行；系统辅助功能与各平台边界见[验证报告](docs/verification/report.md)。
 
+## GitHub Actions 构建产物
+
+推送到 `main` 时会触发 **Apple Builds**。以 `main` 为目标的拉取请求在创建或更新时也会触发。工作流使用 Xcode 27.2 分别构建三个平台的 Release 版本。合入 `main` 后，也可在 **Actions → Apple Builds → Run workflow** 中选中 `main` 手动构建。[工作流配置](.github/workflows/apple-builds.yml)
+
+构建完成后，在对应运行记录的 **Artifacts** 中下载。下表中的应用压缩包可直接下载，保留 7 天。
+
+| 应用压缩包 | 内容 |
+| --- | --- |
+| `MyEnergy-macos.zip` | macOS Universal 应用，包含 arm64 和 x86_64 |
+| `MyEnergy-iphone.zip` | iPhone／iPad 真机构建，内嵌配对的 Watch 应用 |
+| `MyEnergy-watch.zip` | 单独提供的 Apple Watch 配对应用 |
+
+工作流关闭 Xcode 签名，无需 Apple Team 或签名密钥。iPhone 和 Watch 真机安装需要配置 Apple 签名。macOS 对外分发需要签名和公证。
+
+本地可以用同一脚本复现，默认输出到 `build/apple-artifacts/`。每次命令构建一个平台。
+
+```sh
+./scripts/package-apple.sh macos
+./scripts/package-apple.sh iphone
+./scripts/package-apple.sh watch
+```
+
 ## 真机配置
 
 通用目标的无 Team `Debug` 关闭签名及需团队的 entitlement。`run-watch.sh` 的模拟器 `DeviceDebug` 使用本地 ad-hoc 签名携带 HealthKit entitlement，不需要 Apple Team；这不等于真机签名完成。真机使用 `DeviceDebug` configuration，配置你的 Team、唯一 Bundle ID、HealthKit 和 Sign in with Apple；Watch companion 与 iPhone 关联标识保持一致。
