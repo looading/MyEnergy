@@ -11,4 +11,5 @@ xcuserdata/
 server/data/
 .local/
 *.log
+*.profraw
 

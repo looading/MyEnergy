@@ -13,6 +13,7 @@ struct TodayView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
     @State private var selectedEntry: EnergyEntry?
+    @State private var showsLocalAI = false
 
     private var latest: EnergyEntry? { model.todayEntries.first }
     private var completed: Int { model.activeHabits.filter { model.isComplete($0) }.count }
@@ -33,6 +34,7 @@ struct TodayView: View {
                 LazyVGrid(columns: supportingColumns, alignment: .leading, spacing: 20) {
                     habitsCard
                     sleepCard
+                    localAICard
                     HealthReferenceCard(model: model)
                 }
                 recordsCard
@@ -46,6 +48,7 @@ struct TodayView: View {
         }
         .background(theme.canvas)
         .sheet(item: $selectedEntry) { entry in EntryDetailView(model: model, entryID: entry.id) }
+        .sheet(isPresented: $showsLocalAI) { LocalAIView(model: model) }
     }
 
     private var heading: some View {
@@ -133,6 +136,20 @@ struct TodayView: View {
         }.frame(maxWidth: .infinity, alignment: .leading).padding(16)
             .background(theme.accentSoft.opacity(0.45), in: RoundedRectangle(cornerRadius: 18))
             .accessibilityElement(children: .combine)
+    }
+
+    private var localAICard: some View {
+        EnergyCard {
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeading(title: "每日复盘", subtitle: "回顾今天，选一个小行动")
+                Text("主动生成简短复盘与可选习惯建议。先查看本次事实，再选择本机或已授权的局域网设备。")
+                    .font(.callout).foregroundStyle(theme.secondary)
+                Button { showsLocalAI = true } label: {
+                    Label("查看与生成复盘", systemImage: "sparkles")
+                        .frame(minHeight: 44, alignment: .leading)
+                }.buttonStyle(.bordered).disabled(!model.isLoaded || model.hasLoadFailure)
+            }.fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private var habitsCard: some View {

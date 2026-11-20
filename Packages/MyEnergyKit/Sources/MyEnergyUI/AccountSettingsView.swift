@@ -42,6 +42,17 @@ final class AccountController: ObservableObject {
   private var restored = false
   var canSync: Bool { session != nil && service != nil }
 
+  /// 只为当前已解锁的账号空间派生独立用途密钥，不向局域网暴露 vault 原密钥。
+  func localAIIdentity(for model: AppModel) -> LocalAIIdentity? {
+    guard !model.isDemo, !isBusy, let session, !session.isExpired, let key, key.count == 32,
+      let target = try? accountURL(session.accountID),
+      target.standardizedFileURL == model.storageURL.standardizedFileURL else { return nil }
+    let namespace = "\(serverScope):\(session.accountID)"
+    let derived = HKDF<SHA256>.deriveKey(inputKeyMaterial: SymmetricKey(data: key),
+      salt: Data("MyEnergy.LocalAI.TLS.v1".utf8), info: Data(namespace.utf8), outputByteCount: 32)
+    return try? LocalAIIdentity(namespace: namespace, preSharedKey: derived.withUnsafeBytes { Data($0) })
+  }
+
   convenience init() {
     self.init(secrets: KeychainAccountSecretsStore(), preferences: .standard,
       anonymousRecordsURL: AppModel.defaultStorageURL)

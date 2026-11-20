@@ -1,5 +1,6 @@
 import SwiftUI
 import MyEnergyUI
+import MyEnergyLocalAI
 
 @main
 struct MyEnergyApp: App {
@@ -14,7 +15,10 @@ struct MyEnergyApp: App {
   var body: some Scene {
     WindowGroup {
       MyEnergyRootView(model: model)
-        .task { await devices.start() }
+        .task {
+          NativeLocalAI.install()
+          await devices.start()
+        }
         .onChange(of: scenePhase) { _, phase in if phase == .active { devices.retry() } }
         #if os(macOS)
         .frame(minWidth: 880, minHeight: 640)

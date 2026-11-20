@@ -13,6 +13,8 @@ configs:
 packages:
   MyEnergyKit:
     path: Packages/MyEnergyKit
+  MyEnergyLocalAI:
+    path: Packages/MyEnergyLocalAI
 settings:
   base:
     SWIFT_VERSION: '6.0'
@@ -31,6 +33,8 @@ targets:
     dependencies:
       - package: MyEnergyKit
         product: MyEnergyUI
+      - package: MyEnergyLocalAI
+        product: MyEnergyLocalAI
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.myenergy.mac
@@ -48,6 +52,8 @@ targets:
       path: Configuration/Mac-Info.plist
       properties:
         CFBundleDisplayName: MyEnergy
+        NSLocalNetworkUsageDescription: 在你允许后，将本次复盘摘要交给同账号 iPhone 或 Mac 本地处理；不传原始健康样本或备注。
+        NSBonjourServices: [_myenergy-ai._tcp]
         LSApplicationCategoryType: public.app-category.healthcare-fitness
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
@@ -64,6 +70,8 @@ targets:
     dependencies:
       - package: MyEnergyKit
         product: MyEnergyUI
+      - package: MyEnergyLocalAI
+        product: MyEnergyLocalAI
       - target: MyEnergyWatch
         embed: true
     settings:
@@ -82,6 +90,8 @@ targets:
       path: Configuration/iOS-Info.plist
       properties:
         CFBundleDisplayName: MyEnergy
+        NSLocalNetworkUsageDescription: 在你允许后，将本次复盘摘要交给同账号 iPhone 或 Mac 本地处理；不传原始健康样本或备注。
+        NSBonjourServices: [_myenergy-ai._tcp]
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

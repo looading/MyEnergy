@@ -77,3 +77,25 @@ namespace 发布真实错误的显示顺序、生产后台迟到错误覆盖状�
 20:38 Watch 在前台 reply 时出现 EXC_BREAKPOINT／SIGTRAP。原因是后台 WCSession 进入被隐式 MainActor 隔离的外层 closure，在创建 Task 前触发断言。三个 SDK 即时 reply／error 外层 closure 已显式 `@Sendable`，内部 Task 的 MainActor 隔离保留；最新 DeviceDebug 双端 SDK 重建重装通过。后续观察为一个 Watch 进程，只有 20:38 旧报告，无新 crash；这只覆盖本次运行窗口。
 
 最后修复已通过 `watch-final-tests.log` 的 130 Swift／8 Node 完整回归，`final-MyEnergyWatch.log`、`final-MyEnergyiOS.log`、`final-MyEnergyMac.log` 均成功；独立 review 确认三个 `@Sendable` 修复合理且无同类遗漏。HealthKit SDK 的 NS_SWIFT_SENDABLE 已静态核对，HealthDataClient 未改动。不得把模型测试算作实际健康授权，也不把前台实测扩大到真机后台。第三次锁屏发生在点击连接之前，尚无授权或查询；已异步请用户决定继续或先保留成果，余下健康／睡眠／主题和示例验收保持待续。
+
+## 2026-11-20 本地 AI 增量风险
+
+用户已明确新增本地 AI，并选择 iPhone 优先、Mac 兜底的每日复盘与习惯建议；这次范围已有对应[设计](../design/local-ai-mvp.md)、[工作包及验收](../implementation/2026-11-20-local-ai-plan.md)。R13 按该增量跟踪，未扩展到后台定时、云推理、持久 AI 历史、Watch AI 执行、生产部署或商店发布。
+
+| ID | 风险 | 概率／影响 | 已触发或待核条件 | 应对与证据 | 负责人 | 当前状态 |
+| --- | --- | --- | --- | --- | --- | --- |
+| R18 | 小模型无法稳定遵循格式或复述输入，阻断可交付复盘 | 高／高 | 0.6B 三次固定场景仅一次通过；1.7B 原始输出在 29／153 token 即 EOS，仍未遵 JSON，未触及 512 token 上限 | 事实压缩为最多六项；正在改为四段真实模型文本，应用构造结构及指定事实关联，保留 Core 严格校验；不静默修 JSON、不猜 ID、不自动重试 | Native agent，root 集成 | 已发生，处理与最终固定场景质量验收进行中 |
+| R19 | 事实 ID 存在或由程序绑定被误当成语义正确及医疗安全证明 | 中／高 | 文本与所关联事实不相符，从单日推断长期趋势／因果，或给出诊断／用药结论 | 输入排除备注、习惯原名和原始健康样本；观察／建议限定确切事实，保留缺失和自述估算说明；检查中文内容及有限医疗表达，并单独审阅真实输出 | Core agent、Native agent，产品验收由 Sponsor 决定 | 结构校验已实现，语义质量与建议价值仍待验证；不承诺模型安全 |
+| R20 | 更大模型或阶段生成带来手机内存、热状态、取消与延迟风险 | 高／高 | 把 984,025,460 bytes 下载大小当运行内存，或从 Mac／模拟器构建推断 iPhone 可推理；取消后旧 GPU 工作与新任务重叠 | 固定 1.7B revision 并逐项校验；各段新 KV、复用权重，总输出 cap 448；共享设备执行位等待真实清理，单列物理 iPhone 内存／功耗／最低系统验证 | Native agent，root 统一验证 | 资产 ready、Native 14 函数／23 用例及三端构建已有证据，四段真实质量与手机资源未验 |
+| R21 | LAN 账号密钥认证被误作完整设备信任与前向保密 | 中／关键 | 将同账号会话当解密能力，错误 namespace／key 可加入，密钥泄露后历史流量仍被认为不可解密，或把 loopback 通过当 Bonjour 真机通过 | 会话与已解锁 key 分离、独立用途派生、默认关闭发送／接收；TLS 1.2 PSK 六项 loopback 正负例通过；明确 plain PSK 无前向保密，凭据生命周期与真实 LAN 后续验收 | root，安全复核参与 | loopback 已应对，前向保密限制及真实同账号／Bonjour／局域网权限风险保持开放 |
+| R22 | 原生自动化控制失败使 Watch 剩余交互缺少现场证据 | 高／中 | Device Hub 画面／AX 可读，但触控、scroll、drag 持续 noWindowsAvailable | 停止重复触控，保留错误证据，还原 All Devices／Info 偏好；恢复可控条件后继续睡眠、停止连接、主题和示例交互，不用自动测试替代现场验收 | root／PM | 已发生，当前交互条件未恢复；不据此判断应用崩溃，也不再以旧锁屏为当前阻塞 |
+
+当前 Kit／服务回归为 157 项 Swift、8 项 Node 通过，Native package 的 14 个测试函数、23 个用例及最新 manifest 检查通过，Mac／iOS Simulator／Watch 最近一轮构建通过。四段生成后的最终真实质量、构建及 UI 尚在进行，以上风险不因阶段测试通过而关闭。最终运行证据由 root 更新[本地 AI 验证记录](../verification/local-ai.md)。
+
+## 2026-11-20 Watch 风险续记
+
+R01、R09 与 R11 的现场条件更新为：已点击 Watch 健康连接并进入无样本说明，尚不能证明具体读取权限获准或存在真实样本。随后阻塞来自 Device Hub 原生控制返回 `noWindowsAvailable`；画面／AX 读取正常，All Devices 与 Info 偏好已还原，旧锁屏不再是当前阻塞。睡眠详情、停止连接、主题预览与完整示例隔离仍未现场验收。真实健康、真机后台与物理设备范围继续开放，不修改前期及 Docker 风险处理证据。
+
+## 本地 AI 收尾后的风险状态
+
+最终证据更新：157 Swift＋8 Node、模型包 21 个测试函数通过；四项 SDK 构建均成功，三个固定断网样例及 Mac 最终示例页面生成通过。R18 的本地格式阻断已有应对，最终样例中未再发现先前的时间外推；这些固定检查不能估计模型总体准确率。R19 保持开放：来源绑定、结构和有限医疗表达校验不等于语义或效果证明，建议仍偏通用。R20 的 Mac 峰值为约 1.38 GiB MLX active memory，iPhone、RSS、热状态和功耗仍未验证。R21 的真实 LAN 与无前向保密限制、R22 的 Watch 触控条件未据此关闭。详情和 UI 取消未赶上忙态的边界见[最终记录](../verification/local-ai.md)。

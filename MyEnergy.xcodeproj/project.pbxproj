@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A10CA11F0000000000000021 /* MyEnergyLocalAI in Frameworks */ = {isa = PBXBuildFile; productRef = A10CA11F0000000000000011 /* MyEnergyLocalAI */; };
+		A10CA11F0000000000000022 /* MyEnergyLocalAI in Frameworks */ = {isa = PBXBuildFile; productRef = A10CA11F0000000000000012 /* MyEnergyLocalAI */; };
 		46D15C252B723296F6A3BFDC /* MyEnergyWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970B955F0A818B343A355E0C /* MyEnergyWatchApp.swift */; };
 		4ED8212EB730D86B8A33D5D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4EC7E4A70BB533953DD8E24 /* Assets.xcassets */; };
 		7FEACBF0D725233C322FFFEA /* MyEnergyWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 6BAC50949D494095E577EDB2 /* MyEnergyWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -61,6 +63,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				878A2C9F917DA17E0AD5378F /* MyEnergyUI in Frameworks */,
+				A10CA11F0000000000000022 /* MyEnergyLocalAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +80,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B31A7022A4A06C2DF07CE14E /* MyEnergyUI in Frameworks */,
+				A10CA11F0000000000000021 /* MyEnergyLocalAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,6 +212,7 @@
 			name = MyEnergyMac;
 			packageProductDependencies = (
 				3225BDBAF8B09B30F040AD5A /* MyEnergyUI */,
+				A10CA11F0000000000000011 /* MyEnergyLocalAI */,
 			);
 			productName = MyEnergyMac;
 			productReference = 30A3E899D2C9B22C5749BC8F /* MyEnergyMac.app */;
@@ -230,6 +235,7 @@
 			name = MyEnergyiOS;
 			packageProductDependencies = (
 				FB050D72E521762519D36158 /* MyEnergyUI */,
+				A10CA11F0000000000000012 /* MyEnergyLocalAI */,
 			);
 			productName = MyEnergyiOS;
 			productReference = C6EF6F5CB80DA3DAD966B46F /* MyEnergyiOS.app */;
@@ -269,6 +275,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				8BB6C96036F6B50347B90A3E /* XCLocalSwiftPackageReference "Packages/MyEnergyKit" */,
+				A10CA11F0000000000000010 /* XCLocalSwiftPackageReference "Packages/MyEnergyLocalAI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6D44324320A9DCA26A185ED4 /* Products */;
@@ -745,6 +752,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		A10CA11F0000000000000010 /* XCLocalSwiftPackageReference "Packages/MyEnergyLocalAI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MyEnergyLocalAI;
+		};
 		8BB6C96036F6B50347B90A3E /* XCLocalSwiftPackageReference "Packages/MyEnergyKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/MyEnergyKit;
@@ -752,6 +763,14 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A10CA11F0000000000000011 /* MyEnergyLocalAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MyEnergyLocalAI;
+		};
+		A10CA11F0000000000000012 /* MyEnergyLocalAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MyEnergyLocalAI;
+		};
 		20F6D3A5F9979D59FEB375E7 /* MyEnergyUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = MyEnergyUI;

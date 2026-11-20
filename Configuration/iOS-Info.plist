@@ -35,5 +35,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>在你允许后，将本次复盘摘要交给同账号 iPhone 或 Mac 本地处理；不传原始健康样本或备注。</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_myenergy-ai._tcp</string>
+	</array>
 </dict>
 </plist>

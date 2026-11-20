@@ -7,6 +7,7 @@ struct EnergySettingsView: View {
     @Environment(\.energyTheme) private var theme
     @ObservedObject var model: AppModel
     @State private var showsHealth = false
+    @State private var showsLocalAI = false
     @State private var showsExport = false
     @State private var exportDocument: EnergyExportDocument?
     @State private var exportResult: String?
@@ -36,6 +37,17 @@ struct EnergySettingsView: View {
                 }
                 EnergyCard {
                     StateThemeGuideView()
+                }
+                EnergyCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        SectionHeading(title: "本地 AI 复盘", subtitle: "模型与设备授权由你决定")
+                        Text("查看当天有限事实、系统模型和可选离线模型，主动生成复盘。跨设备处理默认关闭，不使用云推理。")
+                            .font(.callout).foregroundStyle(theme.secondary)
+                        Button { showsLocalAI = true } label: {
+                            Label("打开每日复盘", systemImage: "sparkles")
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        }.buttonStyle(.bordered).disabled(!model.isLoaded || model.hasLoadFailure)
+                    }.fixedSize(horizontal: false, vertical: true)
                 }
                 EnergyCard {
                     VStack(alignment: .leading, spacing: 18) {
@@ -103,6 +115,7 @@ struct EnergySettingsView: View {
             }.padding(24).frame(maxWidth: 850).frame(maxWidth: .infinity)
         }.background(theme.canvas)
             .sheet(isPresented: $showsHealth) { HealthDetailsView(model: model) }
+            .sheet(isPresented: $showsLocalAI) { LocalAIView(model: model) }
             .sheet(isPresented: $showsClear) { ClearDataConfirmationView(model: model) }
             .fileExporter(isPresented: $showsExport, document: exportDocument, contentType: .json,
                 defaultFilename: "MyEnergy-\(model.isDemo ? "示例-" : "")\(DateRules.dayKey(for: Date()))") { result in
